@@ -1,7 +1,7 @@
 {
   "SaveName": "Harmonies",
-  "EpochTime": 1743932877,
-  "Date": "4/6/2025 11:47:57 AM",
+  "EpochTime": 1750246348,
+  "Date": "6/18/2025 1:32:28 PM",
   "VersionNumber": "v13.3",
   "GameMode": "Harmonies",
   "GameType": "Game",
@@ -269,6 +269,14 @@
       {
         "displayed": "Refillbutton",
         "normalized": "refillbutton"
+      },
+      {
+        "displayed": "cardSlot",
+        "normalized": "cardslot"
+      },
+      {
+        "displayed": "scoreCubeBag",
+        "normalized": "scorecubebag"
       }
     ]
   },
@@ -283,7 +291,7 @@
     "TurnColor": ""
   },
   "DecalPallet": [],
-  "LuaScript": "-- https://steamcommunity.com/id/uliadev/ bother me if the script breaks\r\nfunction onLoad()\r\n    setNotes(\"\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\nHarmonies: Re-Scripted [ulia]\")\r\n    allObjects = getAllObjects()\r\n    local tokenBoard = nil\r\n    setupButton = nil\r\n    refillButton = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Locked\") then\r\n            o.setLock(true)\r\n            o.interactable = false\r\n        end\r\n        if o.hasTag(\"Spirit\") then\r\n            local snapParameters = {\r\n                {\r\n                    position=Vector(-0.82,0.2,-1.35),\r\n                    rotation=Vector(0,0,0),\r\n                    rotation_snap = true,\r\n                    tags={}\r\n                }\r\n            }\r\n            o.setSnapPoints(snapParameters)\r\n            o.setLock(true)\r\n        end\r\n        if o.hasTag(\"Animal\") then\r\n            o.setLock(true)\r\n        end\r\n        if o.hasTag(\"Tokenboard\") then\r\n            tokenBoard = o\r\n        end\r\n        if o.hasTag(\"Setupbutton\") then\r\n            setupButton = o\r\n        end\r\n        if o.hasTag(\"Refillbutton\") then\r\n            refillButton = o\r\n        end\r\n    end\r\n    local tokenBoardRotationOffset = Vector(tokenBoard.getRotation().x, tokenBoard.getRotation().y - 38, tokenBoard.getRotation().z)\r\n    tokenBoard.setRotation(Vector(0, -37, 0))\r\n    spirits = false\r\n    spiritIndex = 0\r\n    animalIndex = 0\r\n    animalPositions = {\r\n        Vector(26.40, 0.1, 9.50),\r\n        Vector(26.40, 0.1, 5.70),\r\n        Vector(26.40, 0.1, 1.90),\r\n        Vector(26.40, 0.1, -1.90),\r\n        Vector(26.40, 0.1, -5.70)\r\n    }\r\n    animalDeckPosition = Vector(26.40, 0.01, -9.50)\r\n    tokenIndex = 0\r\n    --gameSetup()\r\n    setupUI()\r\nend\r\n\r\nfunction setupUI()\r\n    refillButton.setScale({0,0,0})\r\n    refillButton.setColorTint({1,1,1,0})\r\n    setupButton.setColorTint({1,1,1,0})\r\n    local setupParams = {\r\n        click_function = \"gameSetup\",\r\n        function_owner = Global,\r\n        label          = \"START\\nGAME\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 500,\r\n        height         = 500,\r\n        font_size      = 150,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n    }\r\n    setupButton.createButton(setupParams)\r\n    local refillParams = {\r\n        click_function = \"refillComponents\",\r\n        function_owner = Global,\r\n        label          = \"REFILL\\nSTUFF\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 500,\r\n        height         = 500,\r\n        font_size      = 150,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n    }\r\n    refillButton.createButton(refillParams)\r\nend\r\n\r\nfunction refillComponents()\r\n    refillAnimals()\r\n    setupTokens()\r\nend\r\n\r\nfunction gameSetup()\r\n    setupButton.setScale({0,0,0})\r\n    setupButton.setPosition({9000,9000,9000})\r\n    refillButton.setScale({5,1,5})\r\n    pickPlayer()\r\n    Wait.time(function() setupSpirits() end, 0.5, 1)\r\n    Wait.time(function() setupAnimals() end, 1, 1)\r\n    Wait.time(function() setupTokens() end, 1.25, 1)\r\nend\r\n\r\nfunction pickPlayer()\r\n    Turns.enable = true\r\n    Turns.order = {\"Blue\", \"Red\", \"Green\", \"Yellow\"}\r\n    local tokenBoardRotations = {\r\n        {playerColour = \"Red\", rotation = Vector(0,45,0)},\r\n        {playerColour = \"Green\", rotation = Vector(0,135,0)},\r\n        {playerColour = \"Yellow\", rotation = Vector(0,225,0)},\r\n        {playerColour = \"Blue\", rotation = Vector(0,315,0)}\r\n    }\r\n    local seatedPlayers = {}\r\n    for _, player in ipairs(Player.getPlayers()) do\r\n        if player.color ~= \"Black\" then\r\n            if player.color ~= \"Grey\" then\r\n                table.insert(seatedPlayers, player.color)\r\n            end\r\n        end\r\n    end\r\n    local tokenBoard = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Tokenboard\") then\r\n            tokenBoard = o\r\n        end\r\n    end\r\n    local randomSelection = math.random(1, #seatedPlayers)\r\n    local tokenBoardRotation = tokenBoard.getRotation()\r\n    for j, p in ipairs(tokenBoardRotations) do\r\n        if p.playerColour == seatedPlayers[randomSelection] then\r\n            local firstPlayerRotation = tokenBoardRotation:add(p.rotation)\r\n            tokenBoard.setRotation(firstPlayerRotation)\r\n        end\r\n    end\r\n    Turns.turn_color = seatedPlayers[randomSelection]\r\n    printToAll(\"Harmonies: \" .. seatedPlayers[randomSelection] .. \" was selected to go first\")\r\nend\r\n\r\nfunction onChat(message, sender)\r\n    if message == \"!spirits\" then\r\n        if spirits == false then\r\n            setupSpirits()\r\n            spirits = true\r\n        end\r\n    end\r\n    if message == \"!refill\" then\r\n        refillAnimals()\r\n    end\r\nend\r\n\r\n\r\nfunction setupSpirits()\r\n    local spiritCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Spirit\") then\r\n            s.setLock(false)\r\n            table.insert(spiritCards, s)\r\n            s.setPosition({-36.1, 0.1 + (i / 30), 0})\r\n        end\r\n    end\r\n    local groupedSpirits = group(spiritCards)\r\n    groupedSpirits[1].setPosition({-36.1, 0.1, 0})\r\n    Wait.frames(function() groupedSpirits[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedSpirits[1].randomize() end, 30, 1)\r\n    local dealOrder = {\r\n        \"Red\",\r\n        \"Red\",\r\n        \"Blue\",\r\n        \"Blue\",\r\n        \"Green\",\r\n        \"Green\",\r\n        \"Yellow\",\r\n        \"Yellow\"\r\n    }\r\n    Wait.time(function() Wait.time(function() spiritsCycle(groupedSpirits[1], dealOrder) end, 0.2, 8) end, 0.75, 1)\r\nend\r\n\r\nfunction spiritsCycle(deck, order)\r\n    spiritIndex = spiritIndex + 1\r\n    for _, player in ipairs(Player.getPlayers()) do\r\n        if player.color == order[spiritIndex] then\r\n            deck.deal(1, order[spiritIndex])\r\n        end\r\n    end\r\nend\r\n\r\nfunction setupAnimals()\r\n    local animalCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Animal\") then\r\n            s.setLock(false)\r\n            table.insert(animalCards, s)\r\n            s.setPosition(Vector(animalDeckPosition.x, animalDeckPosition.y + (i / 30), animalDeckPosition.z))\r\n        end\r\n    end\r\n    local groupedAnimals = group(animalCards)\r\n    groupedAnimals[1].setPosition(animalDeckPosition)\r\n    Wait.frames(function() groupedAnimals[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedAnimals[1].randomize() end, 30, 1)\r\n    Wait.time(function() Wait.time(function() dealAnimalsCycle(groupedAnimals[1], animalPositions) end, 0.1, 5) end, 0.75, 1)\r\nend\r\n\r\nfunction dealAnimalsCycle(deck, position)\r\n    animalIndex = animalIndex + 1\r\n    local params = {\r\n        position = animalPositions[animalIndex],\r\n        flip = true\r\n    }\r\n    local takenObject = deck.takeObject(params)\r\nend\r\n\r\nfunction setupTokens()\r\n    local tokenBag = nil\r\n    local tokenBoard = nil\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Tokenbag\") then\r\n            tokenBag = s\r\n        end\r\n        if s.hasTag(\"Tokenboard\") then\r\n            tokenBoard = s\r\n        end\r\n    end\r\n    tokenBag.randomize()\r\n    local tokenSnaps = tokenBoard.getSnapPoints()\r\n    local emptySnaps = {}\r\n    for i, s in ipairs(tokenSnaps) do\r\n        --log(s.position)\r\n        --log(\"\\n\")\r\n        --Player[\"White\"].pingTable(tokenBoard.positionToWorld(s.position))\r\n        local snapPos = tokenBoard.positionToWorld(s.position)\r\n        local ray = findObjects(snapPos)\r\n        if ray[1].hit_object.hasTag(\"Tokenboard\") then\r\n            table.insert(emptySnaps, Vector(tokenBoard.positionToWorld(s.position)))\r\n        end\r\n    end\r\n    tokenIndex = 0\r\n    if #emptySnaps > 0 then\r\n        Wait.time(function() refillTokens(tokenBag, emptySnaps) end, 0.1, #emptySnaps)\r\n    end\r\nend\r\n\r\nfunction refillTokens(bag, positions)\r\n    tokenIndex = tokenIndex + 1\r\n    local params = {\r\n        position = Vector(positions[tokenIndex].x, positions[tokenIndex].y + 0.5, positions[tokenIndex].z),\r\n    }\r\n    local takenObject = bag.takeObject(params)\r\nend\r\n\r\nfunction refillAnimals()\r\n    allObjects = getAllObjects()\r\n    local animalDeck = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Animal\") then\r\n            if o.tag == \"Deck\" then\r\n                animalDeck = o\r\n            end\r\n        end\r\n    end\r\n    local emptyAnimals = {}\r\n    for i, p in ipairs(animalPositions) do\r\n        if findObjects(p)[1].hit_object.tag ~= \"Card\" then\r\n            local params = {position = p, flip = true}\r\n            animalDeck.takeObject(params)\r\n        end\r\n    end\r\nend\r\n\r\nfunction findObjects(pos)\r\n    local hitList = Physics.cast({\r\n        origin       = pos,\r\n        direction    = {0,-1,0},\r\n        type         = 3,\r\n        size         = {0.1,0.1,0.1},\r\n        max_distance = 100,\r\n        debug        = false,\r\n    })\r\n    return hitList\r\nend",
+  "LuaScript": "-- https://steamcommunity.com/id/uliadev/ bother me if the script breaks\r\nfunction onLoad()\r\n    setNotes(\"\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\nHarmonies: Re-Scripted [ulia]\")\r\n    allObjects = getAllObjects()\r\n    local tokenBoard = nil\r\n    setupButton = nil\r\n    refillButton = nil\r\n    scoreCubeBag = nil\r\n    cardSlots = {}\r\n    for i, o in ipairs(allObjects) do\r\n        --if o.hasTag(\"Card\") then\r\n        --    local initialPosition = o.getPosition()\r\n        --    local raisePosition = Vector(initialPosition.x, 2.1, initialPosition.z)\r\n        --    o.setPosition(raisePosition)\r\n        --end\r\n        if o.hasTag(\"cardSlot\") then\r\n            o.setColorTint({0,0,0,0.4})\r\n            table.insert(cardSlots, o)\r\n        end\r\n        if o.hasTag(\"Locked\") then\r\n            o.setLock(true)\r\n            o.interactable = false\r\n        end\r\n        if o.hasTag(\"Spirit\") then\r\n            local snapParameters = {\r\n                {\r\n                    position=Vector(-0.82,0.2,-1.35),\r\n                    rotation=Vector(0,0,0),\r\n                    rotation_snap = true,\r\n                    tags={}\r\n                }\r\n            }\r\n            o.setSnapPoints(snapParameters)\r\n            o.setLock(true)\r\n        end\r\n        if o.hasTag(\"Animal\") then\r\n            o.setLock(true)\r\n        end\r\n        if o.hasTag(\"Tokenboard\") then\r\n            tokenBoard = o\r\n        end\r\n        if o.hasTag(\"Setupbutton\") then\r\n            setupButton = o\r\n        end\r\n        if o.hasTag(\"Refillbutton\") then refillButton = o end\r\n        if o.hasTag(\"scoreCubeBag\") then scoreCubeBag = o end\r\n    end\r\n    local tokenBoardRotationOffset = Vector(tokenBoard.getRotation().x, tokenBoard.getRotation().y - 38, tokenBoard.getRotation().z)\r\n    tokenBoard.setRotation(Vector(0, -37, 0))\r\n    spirits = false\r\n    spiritIndex = 0\r\n    animalIndex = 0\r\n    animalPositions = {\r\n        Vector(26.40, 2.1, 9.50),\r\n        Vector(26.40, 2.1, 5.70),\r\n        Vector(26.40, 2.1, 1.90),\r\n        Vector(26.40, 2.1, -1.90),\r\n        Vector(26.40, 2.1, -5.70)\r\n    }\r\n    animalDeckPosition = Vector(26.40, 2, -9.50)\r\n    tokenIndex = 0\r\n    --gameSetup()\r\n    setupUI()\r\nend\r\n\r\nfunction setupUI()\r\n    refillButton.setScale({0,0,0})\r\n    refillButton.setColorTint({1,1,1,0})\r\n    setupButton.setColorTint({1,1,1,0})\r\n    setupButton.setPosition({13.5, 3, 0})\r\n    local setupParams = {\r\n        click_function = \"gameSetup\",\r\n        function_owner = Global,\r\n        label          = \"START GAME\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 2000,\r\n        height         = 500,\r\n        font_size      = 300,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.5, 0.5, 0.5}\r\n    }\r\n    setupButton.createButton(setupParams)\r\n    local refillParams = {\r\n        click_function = \"refillComponents\",\r\n        function_owner = Global,\r\n        label          = \"REFILL STUFF\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 2000,\r\n        height         = 500,\r\n        font_size      = 300,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.5, 0.5, 0.5}\r\n    }\r\n    refillButton.createButton(refillParams)\r\n    local refillCubesParameters = {\r\n        click_function = \"refillCubes\",\r\n        function_owner = Global,\r\n        label          = \"\",\r\n        position       = {0.4, 0.5, -0.6},\r\n        rotation       = {0, 180, 0},\r\n        width          = 1700,\r\n        height         = 1000,\r\n        font_size      = 500,\r\n        color          = {0.843, 0.313, 0.054},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.05, 0.05, 0.05},\r\n        tooltip        = \"Refill Score Cubes\"\r\n    }\r\n    for c, cardSlot in ipairs(cardSlots) do\r\n        cardSlot.createButton(refillCubesParameters)\r\n    end\r\nend\r\n\r\nfunction refillComponents()\r\n    refillAnimals()\r\n    setupTokens()\r\nend\r\n\r\nfunction gameSetup()\r\n    setupButton.setScale({0,0,0})\r\n    setupButton.setPosition({9000,9000,9000})\r\n    refillButton.setScale({5,1,5})\r\n    refillButton.setPosition({13.5, 3, 0})\r\n    pickPlayer()\r\n    Wait.time(function() setupSpirits() end, 0.5, 1)\r\n    Wait.time(function() setupAnimals() end, 1, 1)\r\n    Wait.time(function() setupTokens() end, 1.25, 1)\r\nend\r\n\r\nfunction pickPlayer()\r\n    Turns.enable = true\r\n    Turns.order = {\"Blue\", \"Red\", \"Green\", \"Yellow\"}\r\n    local tokenBoardRotations = {\r\n        {playerColour = \"Red\", rotation = Vector(0,45,0)},\r\n        {playerColour = \"Green\", rotation = Vector(0,135,0)},\r\n        {playerColour = \"Yellow\", rotation = Vector(0,225,0)},\r\n        {playerColour = \"Blue\", rotation = Vector(0,315,0)}\r\n    }\r\n    local seatedPlayers = {}\r\n    for _, player in ipairs(Player.getPlayers()) do\r\n        if player.color ~= \"Black\" then\r\n            if player.color ~= \"Grey\" then\r\n                table.insert(seatedPlayers, player.color)\r\n            end\r\n        end\r\n    end\r\n    local tokenBoard = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Tokenboard\") then\r\n            tokenBoard = o\r\n        end\r\n    end\r\n    local randomSelection = math.random(1, #seatedPlayers)\r\n    local tokenBoardRotation = tokenBoard.getRotation()\r\n    for j, p in ipairs(tokenBoardRotations) do\r\n        if p.playerColour == seatedPlayers[randomSelection] then\r\n            local firstPlayerRotation = tokenBoardRotation:add(p.rotation)\r\n            tokenBoard.setRotation(firstPlayerRotation)\r\n        end\r\n    end\r\n    Turns.turn_color = seatedPlayers[randomSelection]\r\n    printToAll(\"Harmonies: \" .. seatedPlayers[randomSelection] .. \" was selected to go first\")\r\nend\r\n\r\nfunction onChat(message, sender)\r\n    if message == \"!spirits\" then\r\n        if spirits == false then\r\n            setupSpirits()\r\n            spirits = true\r\n        end\r\n    end\r\n    if message == \"!refill\" then\r\n        refillAnimals()\r\n    end\r\nend\r\n\r\n\r\nfunction setupSpirits()\r\n    local spiritCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Spirit\") then\r\n            s.setLock(false)\r\n            table.insert(spiritCards, s)\r\n            s.setPosition({-36.1, 0.1 + (i / 30), 0})\r\n        end\r\n    end\r\n    local groupedSpirits = group(spiritCards)\r\n    groupedSpirits[1].setPosition({-17, 2.1, 0})\r\n    Wait.frames(function() groupedSpirits[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedSpirits[1].randomize() end, 30, 1)\r\n    local dealOrder = {\r\n        \"Red\",\r\n        \"Blue\",\r\n        \"Green\",\r\n        \"Yellow\",\r\n        \"Red\",\r\n        \"Blue\",\r\n        \"Green\",\r\n        \"Yellow\",\r\n    }\r\n    Wait.time(function() Wait.time(function() spiritsCycle(groupedSpirits[1], dealOrder) end, 0.2, 8) end, 0.75, 1)\r\nend\r\n\r\nfunction spiritsCycle(deck, order)\r\n    spiritIndex = spiritIndex + 1\r\n    --for _, player in ipairs(Player.getPlayers()) do\r\n    --    if player.color == order[spiritIndex] then\r\n    --        deck.deal(1, order[spiritIndex])\r\n    --    end\r\n    --end\r\n    deck.deal(1, order[spiritIndex])\r\nend\r\n\r\nfunction setupAnimals()\r\n    local animalCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Animal\") then\r\n            s.setLock(false)\r\n            table.insert(animalCards, s)\r\n            s.setPosition(Vector(animalDeckPosition.x, animalDeckPosition.y + (i / 30), animalDeckPosition.z))\r\n        end\r\n    end\r\n    local groupedAnimals = group(animalCards)\r\n    groupedAnimals[1].setPosition(animalDeckPosition)\r\n    Wait.frames(function() groupedAnimals[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedAnimals[1].randomize() end, 30, 1)\r\n    Wait.time(function() Wait.time(function() dealAnimalsCycle(groupedAnimals[1], animalPositions) end, 0.1, 5) end, 0.75, 1)\r\nend\r\n\r\nfunction dealAnimalsCycle(deck, position)\r\n    animalIndex = animalIndex + 1\r\n    local params = {\r\n        position = animalPositions[animalIndex],\r\n        flip = true\r\n    }\r\n    local takenObject = deck.takeObject(params)\r\nend\r\n\r\nfunction setupTokens()\r\n    local tokenBag = nil\r\n    local tokenBoard = nil\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Tokenbag\") then\r\n            tokenBag = s\r\n        end\r\n        if s.hasTag(\"Tokenboard\") then\r\n            tokenBoard = s\r\n        end\r\n    end\r\n    tokenBag.randomize()\r\n    local tokenSnaps = tokenBoard.getSnapPoints()\r\n    local emptySnaps = {}\r\n    for i, s in ipairs(tokenSnaps) do\r\n        --log(s.position)\r\n        --log(\"\\n\")\r\n        --Player[\"White\"].pingTable(tokenBoard.positionToWorld(s.position))\r\n        local snapPos = tokenBoard.positionToWorld(s.position)\r\n        local ray = findObjects(snapPos)\r\n        if ray[1].hit_object.hasTag(\"Tokenboard\") then\r\n            table.insert(emptySnaps, Vector(tokenBoard.positionToWorld(s.position)))\r\n        end\r\n    end\r\n    tokenIndex = 0\r\n    if #emptySnaps > 0 then\r\n        Wait.time(function() refillTokens(tokenBag, emptySnaps) end, 0.1, #emptySnaps)\r\n    end\r\nend\r\n\r\nfunction refillTokens(bag, positions)\r\n    tokenIndex = tokenIndex + 1\r\n    local params = {\r\n        position = Vector(positions[tokenIndex].x, positions[tokenIndex].y + 0.5, positions[tokenIndex].z),\r\n    }\r\n    local takenObject = bag.takeObject(params)\r\nend\r\n\r\nfunction refillAnimals()\r\n    allObjects = getAllObjects()\r\n    local animalDeck = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Animal\") then\r\n            if o.tag == \"Deck\" then\r\n                animalDeck = o\r\n            end\r\n        end\r\n    end\r\n    local emptyAnimals = {}\r\n    for i, p in ipairs(animalPositions) do\r\n        if findObjects(p)[1].hit_object.tag ~= \"Card\" then\r\n            local params = {position = p, flip = true}\r\n            animalDeck.takeObject(params)\r\n        end\r\n    end\r\nend\r\n\r\nfunction refillCubes(object, player, alt)\r\n    local pos = Vector(object.getPosition())\r\n    local posOffset = pos:add(Vector(0,5,0))\r\n    local findCard = findObjects(posOffset)\r\n    local card = nil\r\n    local cardSnaps = nil\r\n    for o, object in ipairs(findCard) do\r\n        if object.hit_object.hasTag(\"Animal\") then\r\n            card = object.hit_object\r\n            cardSnaps = object.hit_object.getSnapPoints()\r\n        end\r\n    end\r\n    local findCubes = findCast(pos,Vector(3.7,1,6.2),3)\r\n    for c, cube in ipairs(findCubes) do\r\n        if cube.hit_object.hasTag(\"Token\") then\r\n            cube.hit_object.destruct()\r\n        end\r\n    end\r\n    for s, snap in ipairs(cardSnaps) do\r\n        local pos = Vector(card.positionToWorld(snap.position)):add(Vector(0,1,0))\r\n        scoreCubeBag.takeObject({position=pos})\r\n    end\r\nend\r\n\r\nfunction findObjects(pos)\r\n    local hitList = Physics.cast({\r\n        origin       = pos,\r\n        direction    = {0,-1,0},\r\n        type         = 3,\r\n        size         = {0.1,0.1,0.1},\r\n        max_distance = 100,\r\n        debug        = false,\r\n    })\r\n    return hitList\r\nend\r\n\r\nfunction findCast(pos,size,type)\r\n    local hitList = Physics.cast({\r\n        origin       = pos,\r\n        direction    = {0,-1,0},\r\n        type         = type,\r\n        size         = size,\r\n        max_distance = 100,\r\n        debug        = false,\r\n    })\r\n    return hitList\r\nend",
   "LuaScriptState": "",
   "XmlUI": "<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->",
   "SnapPoints": [
@@ -338,7 +346,7 @@
       "Rotation": {
         "x": -9.03278E-08,
         "y": 359.559174,
-        "z": -1.69529471E-07
+        "z": -1.69529557E-07
       }
     },
     {
@@ -360,9 +368,9 @@
         "z": -11.0000143
       },
       "Rotation": {
-        "x": 5.51709E-08,
+        "x": 5.517094E-08,
         "y": 180.026474,
-        "z": 3.08456919E-07
+        "z": 3.084571E-07
       }
     },
     {
@@ -494,7 +502,7 @@
       "Rotation": {
         "x": -2.00008927E-07,
         "y": 0.3941535,
-        "z": -2.14568E-07
+        "z": -2.14567848E-07
       }
     },
     {
@@ -612,7 +620,7 @@
       "Name": "HandTrigger",
       "Transform": {
         "posX": 13.3,
-        "posY": 2.5,
+        "posY": 4.5,
         "posZ": -28.0,
         "rotX": 0.0,
         "rotY": 0.0,
@@ -662,7 +670,7 @@
       "Name": "HandTrigger",
       "Transform": {
         "posX": -13.3,
-        "posY": 2.5,
+        "posY": 4.5,
         "posZ": 28.0,
         "rotX": 0.0,
         "rotY": 180.0,
@@ -712,7 +720,7 @@
       "Name": "HandTrigger",
       "Transform": {
         "posX": -13.3,
-        "posY": 2.5,
+        "posY": 4.5,
         "posZ": -28.0,
         "rotX": 0.0,
         "rotY": 0.0,
@@ -762,7 +770,7 @@
       "Name": "HandTrigger",
       "Transform": {
         "posX": 13.3,
-        "posY": 2.5,
+        "posY": 4.5,
         "posZ": 28.0,
         "rotX": 0.0,
         "rotY": 180.0,
@@ -811,12 +819,12 @@
       "GUID": "c57b1d",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": 20.9000721,
-        "posY": 0.250003546,
-        "posZ": -18.0500622,
-        "rotX": 3.25130168E-05,
-        "rotY": 179.998062,
-        "rotZ": 5.797376E-05,
+        "posX": 20.90008,
+        "posY": 2.25,
+        "posZ": -18.05007,
+        "rotX": -8.6322194E-05,
+        "rotY": 179.998123,
+        "rotZ": -2.10222333E-05,
         "scaleX": 0.25,
         "scaleY": 0.25,
         "scaleZ": 0.25
@@ -841,7 +849,7 @@
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": false,
+      "Locked": true,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -872,7 +880,7 @@
       "Name": "Bag",
       "Transform": {
         "posX": -10.00002,
-        "posY": -0.1850329,
+        "posY": 2.2,
         "posZ": -1.40466727E-06,
         "rotX": 7.49367871E-07,
         "rotY": 0.004593536,
@@ -7886,12 +7894,12 @@
       "GUID": "56b811",
       "Name": "Custom_Tile",
       "Transform": {
-        "posX": -36.10021,
-        "posY": 1.42902136E-05,
-        "posZ": -15.400074,
-        "rotX": 7.6931957E-07,
-        "rotY": 180.002762,
-        "rotZ": -9.00197733E-07,
+        "posX": -36.00001,
+        "posY": 2.00000262,
+        "posZ": -16.0000038,
+        "rotX": 8.013228E-07,
+        "rotY": 180.002747,
+        "rotZ": 2.8348606E-07,
         "scaleX": 5.670261,
         "scaleY": 1.0,
         "scaleZ": 5.670261
@@ -7943,11 +7951,11 @@
       "GUID": "9f9556",
       "Name": "Custom_PDF",
       "Transform": {
-        "posX": -36.1001968,
-        "posY": 0.200002283,
-        "posZ": 15.4000854,
-        "rotX": 5.597719E-07,
-        "rotY": 180.024261,
+        "posX": -36.0000076,
+        "posY": 2.20000768,
+        "posZ": 16.0000038,
+        "rotX": 7.843755E-07,
+        "rotY": 180.0242,
         "rotZ": 180.0,
         "scaleX": 3.0,
         "scaleY": 1.0,
@@ -7968,7 +7976,7 @@
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": true,
+      "Locked": false,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -7994,12 +8002,12 @@
       "GUID": "a7710a",
       "Name": "CardCustom",
       "Transform": {
-        "posX": 2.06890854E-05,
-        "posY": 0.0136069162,
-        "posZ": -19.0006771,
-        "rotX": -1.98719334E-07,
-        "rotY": 180.000687,
-        "rotZ": -5.68622966E-07,
+        "posX": 2.15319E-05,
+        "posY": 2.1,
+        "posZ": -19.0007267,
+        "rotX": 4.11916261E-08,
+        "rotY": 180.0007,
+        "rotZ": 1.640163E-08,
         "scaleX": 2.5,
         "scaleY": 1.0,
         "scaleZ": 2.5
@@ -8019,7 +8027,7 @@
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": false,
+      "Locked": true,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -8053,7 +8061,7 @@
       "Name": "Custom_Model_Infinite_Bag",
       "Transform": {
         "posX": 20.89967,
-        "posY": 0.5500141,
+        "posY": 2.55,
         "posZ": -16.1500034,
         "rotX": 2.11526412E-06,
         "rotY": 179.999878,
@@ -8072,8 +8080,8 @@
       },
       "ColorDiffuse": {
         "r": 0.8397212,
-        "g": 0.3135532,
-        "b": 0.0541258156,
+        "g": 0.313552856,
+        "b": 0.0541255474,
         "a": 0.784313738
       },
       "Tags": [
@@ -8175,7 +8183,7 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": 1.07288361E-06,
-        "posY": 0.125002071,
+        "posY": 2.13,
         "posZ": -1.475215E-06,
         "rotX": 0.0,
         "rotY": 323.0,
@@ -8391,12 +8399,12 @@
       "GUID": "412f48",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -20.9000778,
-        "posY": 0.250003725,
-        "posZ": -18.0500641,
-        "rotX": 0.000106532978,
-        "rotY": 180.017532,
-        "rotZ": 4.94830274E-05,
+        "posX": -20.9000854,
+        "posY": 2.25,
+        "posZ": -18.0500717,
+        "rotX": -0.000141577955,
+        "rotY": 180.017639,
+        "rotZ": -5.49090146E-05,
         "scaleX": 0.25,
         "scaleY": 0.25,
         "scaleZ": 0.25
@@ -8421,7 +8429,7 @@
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": false,
+      "Locked": true,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -8452,7 +8460,7 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": -13.3,
-        "posY": 0.125001952,
+        "posY": 2.13,
         "posZ": -19.0000057,
         "rotX": -2.78402285E-06,
         "rotY": 180.0,
@@ -9315,7 +9323,7 @@
       "Name": "ScriptingTrigger",
       "Transform": {
         "posX": 25.37,
-        "posY": 1.15653133,
+        "posY": 2.1,
         "posZ": -9.32372952,
         "rotX": 0.0,
         "rotY": 90.0,
@@ -9364,7 +9372,7 @@
       "Name": "ScriptingTrigger",
       "Transform": {
         "posX": 25.37,
-        "posY": 1.15653133,
+        "posY": 2.1,
         "posZ": 2.550394,
         "rotX": 0.0,
         "rotY": 90.0,
@@ -9413,7 +9421,7 @@
       "Name": "Custom_Assetbundle",
       "Transform": {
         "posX": 0.0,
-        "posY": 0.0,
+        "posY": 2.0,
         "posZ": -1.07390406E-07,
         "rotX": 0.0,
         "rotY": 90.0,
@@ -9431,8 +9439,8 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.130639523,
-        "g": 0.402312428,
+        "r": 0.130639166,
+        "g": 0.40231207,
         "b": 0.531358838
       },
       "Tags": [
@@ -9468,7 +9476,7 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": 13.3,
-        "posY": 0.125001922,
+        "posY": 2.13,
         "posZ": -19.0000057,
         "rotX": 1.11742838E-06,
         "rotY": 180.000015,
@@ -10331,7 +10339,7 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": -13.3,
-        "posY": 0.12500149,
+        "posY": 2.13,
         "posZ": 19.0000057,
         "rotX": 5.79276559E-07,
         "rotY": 6.309795E-07,
@@ -11194,7 +11202,7 @@
       "Name": "Custom_Model",
       "Transform": {
         "posX": 13.3,
-        "posY": 0.125002161,
+        "posY": 2.13,
         "posZ": 19.0,
         "rotX": 5.917756E-07,
         "rotY": 2.36775577E-05,
@@ -12056,12 +12064,12 @@
       "GUID": "a71bdb",
       "Name": "CardCustom",
       "Transform": {
-        "posX": -1.39430122E-05,
-        "posY": 0.0136068957,
-        "posZ": 18.9990273,
-        "rotX": 8.07653748E-08,
-        "rotY": -0.003148706,
-        "rotZ": 1.17360919E-07,
+        "posX": -1.44594705E-05,
+        "posY": 2.1,
+        "posZ": 18.9990788,
+        "rotX": 7.19145845E-08,
+        "rotY": -0.003096713,
+        "rotZ": 1.77343466E-07,
         "scaleX": 2.5,
         "scaleY": 1.0,
         "scaleZ": 2.5
@@ -12081,7 +12089,7 @@
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": false,
+      "Locked": true,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -12111,255 +12119,11 @@
       "XmlUI": ""
     },
     {
-      "GUID": "b9c3cd",
-      "Name": "Card",
-      "Transform": {
-        "posX": -7.600029,
-        "posY": 0.0136068156,
-        "posZ": -11.0000372,
-        "rotX": -1.04739144E-07,
-        "rotY": 180.0,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "0354ce",
-      "Name": "Card",
-      "Transform": {
-        "posX": -11.3994961,
-        "posY": 0.0136068324,
-        "posZ": -11.0000162,
-        "rotX": -1.18186932E-07,
-        "rotY": 180.0,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "f3be74",
-      "Name": "Card",
-      "Transform": {
-        "posX": -15.2000227,
-        "posY": 0.013612194,
-        "posZ": -11.0000172,
-        "rotX": -5.74480126E-08,
-        "rotY": 180.000015,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "732294",
-      "Name": "Card",
-      "Transform": {
-        "posX": -19.0000286,
-        "posY": 0.0136067979,
-        "posZ": -11.0000181,
-        "rotX": -3.14835546E-07,
-        "rotY": 180.000015,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
       "GUID": "7304cc",
       "Name": "Card",
       "Transform": {
         "posX": -39.9008064,
-        "posY": 0.0136068761,
+        "posY": 2.1,
         "posZ": 2.200082,
         "rotX": -2.17808946E-07,
         "rotY": 180.000137,
@@ -12435,7 +12199,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -26.6005478,
-        "posY": 0.0136091681,
+        "posY": 2.1,
         "posZ": -4.400074,
         "rotX": -4.263514E-07,
         "rotY": 180.002853,
@@ -12511,7 +12275,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -32.3006973,
-        "posY": 0.0136069255,
+        "posY": 2.1,
         "posZ": 2.2000618,
         "rotX": 1.84789542E-07,
         "rotY": 179.998413,
@@ -12587,7 +12351,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -36.1006851,
-        "posY": 0.013606865,
+        "posY": 2.1,
         "posZ": 2.200067,
         "rotX": -1.11394435E-07,
         "rotY": 179.9995,
@@ -12663,7 +12427,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -28.5005989,
-        "posY": 0.0136068156,
+        "posY": 2.1,
         "posZ": 2.20007634,
         "rotX": 2.15491944E-08,
         "rotY": 180.000015,
@@ -12739,7 +12503,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -41.8009377,
-        "posY": 0.0136067774,
+        "posY": 2.1,
         "posZ": -4.40007639,
         "rotX": -2.62229918E-07,
         "rotY": 179.999313,
@@ -12815,7 +12579,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -43.7009125,
-        "posY": 0.0136065241,
+        "posY": 2.1,
         "posZ": 2.200067,
         "rotX": -2.61145118E-07,
         "rotY": 179.997375,
@@ -12891,7 +12655,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -30.4006138,
-        "posY": 0.0136068007,
+        "posY": 2.1,
         "posZ": -4.40009451,
         "rotX": -9.372849E-08,
         "rotY": 179.998718,
@@ -12967,7 +12731,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -34.20064,
-        "posY": 0.0136067355,
+        "posY": 2.1,
         "posZ": -4.400076,
         "rotX": -6.808174E-07,
         "rotY": 179.999054,
@@ -13043,7 +12807,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -38.0007668,
-        "posY": 0.01360682,
+        "posY": 2.1,
         "posZ": -4.400083,
         "rotX": -9.083997E-07,
         "rotY": 180.001816,
@@ -13119,7 +12883,7 @@
       "Name": "Card",
       "Transform": {
         "posX": -45.60099,
-        "posY": 0.0136072487,
+        "posY": 2.1,
         "posZ": -4.40009451,
         "rotX": -1.5607273E-07,
         "rotY": 179.99736,
@@ -13195,7 +12959,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 26.4001,
-        "posY": 0.0136069171,
+        "posY": 2.1,
         "posZ": -5.70002365,
         "rotX": 3.26633547E-08,
         "rotY": 269.998962,
@@ -13213,9 +12977,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -13319,7 +13083,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 26.4001026,
-        "posY": 0.0136068817,
+        "posY": 2.1,
         "posZ": -1.90000856,
         "rotX": 2.4192591E-08,
         "rotY": 269.998779,
@@ -13337,9 +13101,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -13413,7 +13177,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 26.4001,
-        "posY": 0.0136068044,
+        "posY": 2.1,
         "posZ": 1.90000558,
         "rotX": 1.92611139E-07,
         "rotY": 269.9989,
@@ -13431,9 +13195,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -13522,7 +13286,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 26.4000969,
-        "posY": 0.0136068575,
+        "posY": 2.1,
         "posZ": 5.70001936,
         "rotX": 4.618652E-08,
         "rotY": 269.998779,
@@ -13540,9 +13304,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -13661,7 +13425,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 26.4001,
-        "posY": 0.0136068584,
+        "posY": 2.1,
         "posZ": 9.500033,
         "rotX": -2.21207983E-07,
         "rotY": 269.97995,
@@ -13679,9 +13443,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -13755,7 +13519,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 33.0001144,
-        "posY": 0.0136068035,
+        "posY": 2.1,
         "posZ": 7.600026,
         "rotX": -4.731393E-09,
         "rotY": 269.9986,
@@ -13773,9 +13537,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -13879,7 +13643,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 33.0001221,
-        "posY": 0.0136068715,
+        "posY": 2.1,
         "posZ": 3.8000133,
         "rotX": 1.35685013E-07,
         "rotY": 269.999023,
@@ -13897,9 +13661,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -13988,11 +13752,11 @@
       "Name": "Card",
       "Transform": {
         "posX": 33.0001144,
-        "posY": 0.0136068184,
+        "posY": 2.1,
         "posZ": 2.59063484E-07,
-        "rotX": 4.121993E-08,
+        "rotX": 4.12199874E-08,
         "rotY": 269.998932,
-        "rotZ": 3.34121566E-08,
+        "rotZ": 3.341216E-08,
         "scaleX": 2.0,
         "scaleY": 1.0,
         "scaleZ": 2.0
@@ -14006,9 +13770,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14097,7 +13861,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 33.0001221,
-        "posY": 0.0136068128,
+        "posY": 2.1,
         "posZ": -3.80001354,
         "rotX": 1.02107357E-07,
         "rotY": 269.9987,
@@ -14115,9 +13879,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14191,7 +13955,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 33.00012,
-        "posY": 0.0136086419,
+        "posY": 2.1,
         "posZ": -7.60002565,
         "rotX": 9.834448E-08,
         "rotY": 269.999023,
@@ -14209,9 +13973,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14300,7 +14064,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 33.00012,
-        "posY": 0.0136068007,
+        "posY": 2.1,
         "posZ": -11.4000378,
         "rotX": 1.06661226E-07,
         "rotY": 269.9967,
@@ -14318,9 +14082,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14409,7 +14173,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.6001472,
-        "posY": 0.0136083243,
+        "posY": 2.1,
         "posZ": -1.90000916,
         "rotX": 3.12359134E-07,
         "rotY": 270.000122,
@@ -14427,9 +14191,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14518,7 +14282,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.60016,
-        "posY": 0.0136068016,
+        "posY": 2.1,
         "posZ": 1.90000391,
         "rotX": 5.069287E-07,
         "rotY": 269.9995,
@@ -14536,9 +14300,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14657,7 +14421,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.6001549,
-        "posY": 0.0136068072,
+        "posY": 2.1,
         "posZ": 5.700017,
         "rotX": 9.465069E-08,
         "rotY": 269.999756,
@@ -14675,9 +14439,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14751,7 +14515,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.6001549,
-        "posY": 0.0136068007,
+        "posY": 2.1,
         "posZ": 9.500026,
         "rotX": 2.12221465E-07,
         "rotY": 269.999573,
@@ -14769,9 +14533,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14860,7 +14624,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.6001472,
-        "posY": 0.0136072617,
+        "posY": 2.1,
         "posZ": 13.3000441,
         "rotX": 3.125238E-07,
         "rotY": 269.999542,
@@ -14878,9 +14642,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -14984,7 +14748,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 33.00012,
-        "posY": 0.0136068044,
+        "posY": 2.1,
         "posZ": 11.4000349,
         "rotX": -7.226831E-09,
         "rotY": 269.999634,
@@ -15002,9 +14766,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15048,7 +14812,7 @@
             "z": -1.39395714
           },
           "Rotation": {
-            "x": -2.29123566E-06,
+            "x": -2.291237E-06,
             "y": 359.967377,
             "z": 9.872597E-07
           },
@@ -15078,7 +14842,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.60016,
-        "posY": 0.0136068761,
+        "posY": 2.1,
         "posZ": -5.700022,
         "rotX": 3.218902E-07,
         "rotY": 269.9989,
@@ -15096,9 +14860,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15202,7 +14966,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.60015,
-        "posY": 0.0136069134,
+        "posY": 2.1,
         "posZ": -9.500038,
         "rotX": -4.52433646E-08,
         "rotY": 269.999084,
@@ -15220,9 +14984,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15311,7 +15075,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.6001434,
-        "posY": 0.0136068333,
+        "posY": 2.1,
         "posZ": -13.3000479,
         "rotX": -2.0931968E-07,
         "rotY": 269.998749,
@@ -15329,9 +15093,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15435,7 +15199,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.20016,
-        "posY": 0.0136069115,
+        "posY": 2.1,
         "posZ": -7.60002327,
         "rotX": -9.60730944E-08,
         "rotY": 269.9998,
@@ -15453,9 +15217,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15544,7 +15308,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.20015,
-        "posY": 0.0136068817,
+        "posY": 2.1,
         "posZ": -3.80001187,
         "rotX": 3.05413039E-07,
         "rotY": 269.999939,
@@ -15562,9 +15326,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15653,7 +15417,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.2001648,
-        "posY": 0.0136068063,
+        "posY": 2.1,
         "posZ": -3.334327E-07,
         "rotX": 2.55927063E-07,
         "rotY": 269.999481,
@@ -15671,9 +15435,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15762,7 +15526,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.2001572,
-        "posY": 0.0136083029,
+        "posY": 2.1,
         "posZ": -11.400032,
         "rotX": -3.82120078E-07,
         "rotY": 269.999817,
@@ -15780,9 +15544,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15856,7 +15620,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.2001534,
-        "posY": 0.0136067467,
+        "posY": 2.1,
         "posZ": 3.80001545,
         "rotX": 1.43761184E-07,
         "rotY": 270.000061,
@@ -15874,9 +15638,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -15965,7 +15729,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.2001572,
-        "posY": 0.0136071118,
+        "posY": 2.1,
         "posZ": 7.600031,
         "rotX": 2.175445E-07,
         "rotY": 270.000366,
@@ -15983,9 +15747,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -16059,7 +15823,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.20016,
-        "posY": 0.0136069143,
+        "posY": 2.1,
         "posZ": 11.40004,
         "rotX": 2.684784E-07,
         "rotY": 270.000061,
@@ -16077,9 +15841,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -16138,7 +15902,7 @@
             "z": -1.37437117
           },
           "Rotation": {
-            "x": -1.21328731E-06,
+            "x": -1.213288E-06,
             "y": 359.9864,
             "z": -2.51854235E-08
           },
@@ -16153,7 +15917,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.2001724,
-        "posY": 0.0136068938,
+        "posY": 2.1,
         "posZ": -15.2000475,
         "rotX": -2.79429543E-07,
         "rotY": 270.000061,
@@ -16171,9 +15935,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -16262,7 +16026,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 46.2001534,
-        "posY": 0.01360705,
+        "posY": 2.1,
         "posZ": 15.2000484,
         "rotX": 1.8297844E-07,
         "rotY": 270.000061,
@@ -16280,9 +16044,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -16371,7 +16135,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.6001167,
-        "posY": 0.0136068314,
+        "posY": 2.1,
         "posZ": -17.1000538,
         "rotX": -2.594967E-07,
         "rotY": 270.000244,
@@ -16389,9 +16153,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -16465,7 +16229,7 @@
       "Name": "Card",
       "Transform": {
         "posX": 39.6001434,
-        "posY": 0.0136067979,
+        "posY": 2.1,
         "posZ": 17.1000519,
         "rotX": 4.767603E-07,
         "rotY": 269.99942,
@@ -16483,9 +16247,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -16544,7 +16308,7 @@
             "z": -0.887024343
           },
           "Rotation": {
-            "x": -1.99191319E-07,
+            "x": -1.991914E-07,
             "y": 359.9854,
             "z": 2.933459E-07
           },
@@ -16559,7 +16323,7 @@
             "z": -1.36283827
           },
           "Rotation": {
-            "x": -3.446359E-07,
+            "x": -3.44635964E-07,
             "y": 359.9854,
             "z": 2.47720976E-07
           },
@@ -16574,11 +16338,11 @@
       "Name": "Card",
       "Transform": {
         "posX": 26.4000912,
-        "posY": 0.0136068352,
+        "posY": 2.1,
         "posZ": -9.500034,
-        "rotX": -2.33481543E-07,
+        "rotX": -2.33481572E-07,
         "rotY": 269.999939,
-        "rotZ": -8.158814E-07,
+        "rotZ": -8.158815E-07,
         "scaleX": 2.0,
         "scaleY": 1.0,
         "scaleZ": 2.0
@@ -16592,9 +16356,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.12940985,
-        "g": 0.125488281,
-        "b": 0.0941157
+        "r": 0.129409671,
+        "g": 0.1254881,
+        "b": 0.09411552
       },
       "Tags": [
         "Animal",
@@ -16682,12 +16446,12 @@
       "GUID": "db2eae",
       "Name": "Custom_Model_Infinite_Bag",
       "Transform": {
-        "posX": -20.9000053,
-        "posY": 0.550005853,
-        "posZ": -16.1500034,
-        "rotX": -5.336383E-05,
-        "rotY": 179.999756,
-        "rotZ": -3.50188816E-06,
+        "posX": -20.9000244,
+        "posY": 2.550005,
+        "posZ": -16.1500168,
+        "rotX": 1.531817E-05,
+        "rotY": 179.999649,
+        "rotZ": -1.70766252E-05,
         "scaleX": 0.5500004,
         "scaleY": 0.5500004,
         "scaleZ": 0.5500004
@@ -16702,8 +16466,8 @@
       },
       "ColorDiffuse": {
         "r": 0.8397212,
-        "g": 0.3135532,
-        "b": 0.0541258156,
+        "g": 0.313552856,
+        "b": 0.0541255474,
         "a": 0.784313738
       },
       "Tags": [
@@ -16711,7 +16475,7 @@
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": true,
+      "Locked": false,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -16805,7 +16569,7 @@
       "Name": "Custom_Model_Infinite_Bag",
       "Transform": {
         "posX": -20.9000053,
-        "posY": 0.5500054,
+        "posY": 2.55,
         "posZ": 16.1500034,
         "rotX": 1.50529995E-05,
         "rotY": 179.999817,
@@ -16824,8 +16588,8 @@
       },
       "ColorDiffuse": {
         "r": 0.8397212,
-        "g": 0.3135532,
-        "b": 0.0541258156,
+        "g": 0.313552856,
+        "b": 0.0541255474,
         "a": 0.784313738
       },
       "Tags": [
@@ -16926,12 +16690,12 @@
       "GUID": "4f6ebd",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": -20.9000683,
-        "posY": 0.2500021,
-        "posZ": 18.0500717,
-        "rotX": -4.66781348E-05,
-        "rotY": 180.017548,
-        "rotZ": 7.544156E-05,
+        "posX": -20.9000778,
+        "posY": 2.25,
+        "posZ": 18.0500832,
+        "rotX": -6.352204E-05,
+        "rotY": 180.017441,
+        "rotZ": -1.906827E-05,
         "scaleX": 0.25,
         "scaleY": 0.25,
         "scaleZ": 0.25
@@ -16956,7 +16720,7 @@
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": false,
+      "Locked": true,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -16987,7 +16751,7 @@
       "Name": "Custom_Model_Infinite_Bag",
       "Transform": {
         "posX": 20.9000053,
-        "posY": 0.550005,
+        "posY": 2.55,
         "posZ": 16.1500053,
         "rotX": -6.304047E-06,
         "rotY": 179.999741,
@@ -17006,8 +16770,8 @@
       },
       "ColorDiffuse": {
         "r": 0.8397212,
-        "g": 0.3135532,
-        "b": 0.0541258156,
+        "g": 0.313552856,
+        "b": 0.0541255474,
         "a": 0.784313738
       },
       "Tags": [
@@ -17108,12 +16872,12 @@
       "GUID": "243ffc",
       "Name": "Custom_Model",
       "Transform": {
-        "posX": 20.9000816,
-        "posY": 0.250002444,
-        "posZ": 18.0500622,
-        "rotX": 9.75211442E-05,
-        "rotY": 180.018158,
-        "rotZ": 3.02865828E-05,
+        "posX": 20.9000931,
+        "posY": 2.25,
+        "posZ": 18.0500717,
+        "rotX": -3.94342751E-05,
+        "rotY": 180.018692,
+        "rotZ": 2.709414E-05,
         "scaleX": 0.25,
         "scaleY": 0.25,
         "scaleZ": 0.25
@@ -17138,7 +16902,7 @@
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": false,
+      "Locked": true,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -17165,743 +16929,11 @@
       "XmlUI": ""
     },
     {
-      "GUID": "936e36",
-      "Name": "Card",
-      "Transform": {
-        "posX": 7.60001135,
-        "posY": 0.0136092836,
-        "posZ": -11.0000172,
-        "rotX": -1.06348324E-07,
-        "rotY": 180.000015,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "6cd791",
-      "Name": "Card",
-      "Transform": {
-        "posX": 11.4000158,
-        "posY": 0.013609278,
-        "posZ": -11.0000134,
-        "rotX": -2.17882175E-07,
-        "rotY": 179.999969,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "3afcdb",
-      "Name": "Card",
-      "Transform": {
-        "posX": 15.2000151,
-        "posY": 0.0136092752,
-        "posZ": -11.0000114,
-        "rotX": 4.21774047E-08,
-        "rotY": 180.000031,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "edd821",
-      "Name": "Card",
-      "Transform": {
-        "posX": 19.0000153,
-        "posY": 0.0136092771,
-        "posZ": -11.0000086,
-        "rotX": -1.60523261E-09,
-        "rotY": 180.0,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "bc1749",
-      "Name": "Card",
-      "Transform": {
-        "posX": 7.600006,
-        "posY": 0.0136079574,
-        "posZ": 11.0000114,
-        "rotX": -9.09607252E-08,
-        "rotY": 0.394153863,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "4d652f",
-      "Name": "Card",
-      "Transform": {
-        "posX": 11.40001,
-        "posY": 0.01360795,
-        "posZ": 11.0000076,
-        "rotX": -1.59066545E-07,
-        "rotY": 359.965424,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "0e3cc7",
-      "Name": "Card",
-      "Transform": {
-        "posX": 15.20004,
-        "posY": 0.0136079555,
-        "posZ": 11.0000143,
-        "rotX": -2.794734E-07,
-        "rotY": 0.08113898,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "d85a3b",
-      "Name": "Card",
-      "Transform": {
-        "posX": 19.0000515,
-        "posY": 0.013607977,
-        "posZ": 11.0000057,
-        "rotX": 4.774707E-07,
-        "rotY": 3.359065E-05,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "f3adc4",
-      "Name": "Card",
-      "Transform": {
-        "posX": -19.0000324,
-        "posY": 0.0136068342,
-        "posZ": 11.0000153,
-        "rotX": -1.84140774E-07,
-        "rotY": 0.00145334587,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "b6d599",
-      "Name": "Card",
-      "Transform": {
-        "posX": -15.2000227,
-        "posY": 0.0136068352,
-        "posZ": 11.0000181,
-        "rotX": 1.33504244E-07,
-        "rotY": 0.00137048482,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "7a7bd0",
-      "Name": "Card",
-      "Transform": {
-        "posX": -11.4000187,
-        "posY": 0.0136068184,
-        "posZ": 11.0000162,
-        "rotX": -1.64415823E-07,
-        "rotY": 0.00142560364,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "97bf94",
-      "Name": "Card",
-      "Transform": {
-        "posX": -7.60001135,
-        "posY": 0.013606837,
-        "posZ": 11.0000153,
-        "rotX": -1.69530068E-07,
-        "rotY": 0.00141698087,
-        "rotZ": 180.0,
-        "scaleX": 2.0,
-        "scaleY": 1.0,
-        "scaleZ": 2.0
-      },
-      "Nickname": "[i]Nature's Spirit Scoring[/i]\r\n4 points for each Mountain of size 2 or 3.",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.7764706,
-        "g": 0.6784314,
-        "b": 0.5686274
-      },
-      "Tags": [
-        "locked"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": true,
-      "Hands": true,
-      "CardID": 6106,
-      "SidewaysCard": false,
-      "CustomDeck": {
-        "61": {
-          "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691455/F81148E4D45F475E37FF2F56B6BA78EB4C0B2AB9/",
-          "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2502388612352691560/AD4304BB2ACC4B75EE6D84E24F406E71BD319A6E/",
-          "NumWidth": 6,
-          "NumHeight": 2,
-          "BackIsHidden": true,
-          "UniqueBack": false,
-          "Type": 0
-        }
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
       "GUID": "90fcfb",
       "Name": "BlockSquare",
       "Transform": {
-        "posX": 13.3,
-        "posY": 0.500013351,
+        "posX": 13.5,
+        "posY": 3.0,
         "posZ": 0.0,
         "rotX": 1.79163726E-05,
         "rotY": 6.36885743E-05,
@@ -17993,6 +17025,928 @@
       "LuaScript": "",
       "LuaScriptState": "",
       "XmlUI": ""
+    },
+    {
+      "GUID": "f247b0",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -11.3994961,
+        "posY": 2.05,
+        "posZ": -11.0000162,
+        "rotX": 1.74475446E-07,
+        "rotY": 180.006378,
+        "rotZ": -9.227064E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "1707a6",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -15.2000217,
+        "posY": 2.05,
+        "posZ": -11.0000162,
+        "rotX": -2.15058634E-07,
+        "rotY": 180.007568,
+        "rotZ": -6.618436E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "2fc089",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -19.0000267,
+        "posY": 2.05,
+        "posZ": -11.0000181,
+        "rotX": 1.24390372E-05,
+        "rotY": 180.006943,
+        "rotZ": -5.98648876E-06,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "24aa8e",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -7.60005236,
+        "posY": 2.05,
+        "posZ": -11.0000048,
+        "rotX": -2.49718119E-06,
+        "rotY": 180.0064,
+        "rotZ": 5.20359572E-06,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "5238db",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 7.60000944,
+        "posY": 2.05,
+        "posZ": -11.0000143,
+        "rotX": 4.114153E-07,
+        "rotY": 180.001236,
+        "rotZ": 9.97595E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "b7c804",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 11.400013,
+        "posY": 2.05,
+        "posZ": -11.0000105,
+        "rotX": -4.4022368E-08,
+        "rotY": 179.999481,
+        "rotZ": -5.25197265E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "fc0164",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 15.2000113,
+        "posY": 2.05,
+        "posZ": -11.0000086,
+        "rotX": -2.30088958E-07,
+        "rotY": 179.988861,
+        "rotZ": 6.304411E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "ca8b67",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 19.00001,
+        "posY": 2.05,
+        "posZ": -11.0000057,
+        "rotX": 1.37178219E-07,
+        "rotY": 180.000046,
+        "rotZ": -6.80305163E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "e30c1d",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 19.0000534,
+        "posY": 2.05,
+        "posZ": 11.0000086,
+        "rotX": -2.57398085E-08,
+        "rotY": 8.422546E-05,
+        "rotZ": 4.521362E-08,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "2ee671",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 15.2000427,
+        "posY": 2.05,
+        "posZ": 11.0000172,
+        "rotX": 4.277727E-08,
+        "rotY": 359.938,
+        "rotZ": -1.07393521E-06,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "e6e393",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 11.4000111,
+        "posY": 2.05,
+        "posZ": 11.00001,
+        "rotX": 1.81829378E-07,
+        "rotY": 359.971649,
+        "rotZ": 3.91527266E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "d9477a",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": 7.60000658,
+        "posY": 2.05,
+        "posZ": 11.0000153,
+        "rotX": 2.684166E-07,
+        "rotY": 359.6988,
+        "rotZ": 7.38017263E-07,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "db65e4",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -7.600011,
+        "posY": 2.05,
+        "posZ": 11.0000162,
+        "rotX": -1.049389E-07,
+        "rotY": 0.00142801949,
+        "rotZ": -2.19711414E-08,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "d3ac8d",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -11.4000187,
+        "posY": 2.05,
+        "posZ": 11.0000162,
+        "rotX": 1.04358172E-07,
+        "rotY": 0.00156840833,
+        "rotZ": -1.24039116E-06,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "8a94db",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -15.2000237,
+        "posY": 2.05,
+        "posZ": 11.0000181,
+        "rotX": -2.72435656E-08,
+        "rotY": -0.00372204254,
+        "rotZ": 1.27644341E-06,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "7a7215",
+      "Name": "BlockSquare",
+      "Transform": {
+        "posX": -19.0000343,
+        "posY": 2.05,
+        "posZ": 11.0000162,
+        "rotX": -7.928079E-07,
+        "rotY": 0.00146056188,
+        "rotZ": 2.87027456E-06,
+        "scaleX": 3.7,
+        "scaleY": 0.1,
+        "scaleZ": 6.2
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.4
+      },
+      "Tags": [
+        "cardSlot",
+        "locked"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": ""
+    },
+    {
+      "GUID": "8f29d9",
+      "Name": "Custom_Model_Infinite_Bag",
+      "Transform": {
+        "posX": -13.0,
+        "posY": 2.550016,
+        "posZ": 0.0,
+        "rotX": 7.834428E-06,
+        "rotY": 179.999741,
+        "rotZ": -3.66163731E-05,
+        "scaleX": 0.5500004,
+        "scaleY": 0.5500004,
+        "scaleZ": 0.5500004
+      },
+      "Nickname": "",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.8397212,
+        "g": 0.313552856,
+        "b": 0.0541255474,
+        "a": 0.784313738
+      },
+      "Tags": [
+        "scoreCubeBag"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "MaterialIndex": -1,
+      "MeshIndex": -1,
+      "CustomMesh": {
+        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
+        "DiffuseURL": "",
+        "NormalURL": "",
+        "ColliderURL": "",
+        "Convex": true,
+        "MaterialIndex": 0,
+        "TypeIndex": 7,
+        "CastShadows": true
+      },
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": "",
+      "ContainedObjects": [
+        {
+          "GUID": "67c588",
+          "Name": "Custom_Model",
+          "Transform": {
+            "posX": -15.9757071,
+            "posY": 2.34385347,
+            "posZ": -20.53039,
+            "rotX": 7.798893E-05,
+            "rotY": 0.001642834,
+            "rotZ": 3.73435869E-05,
+            "scaleX": 0.250000417,
+            "scaleY": 0.250000417,
+            "scaleZ": 0.250000417
+          },
+          "Nickname": "",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.8397212,
+            "g": 0.313556671,
+            "b": 0.0541282371,
+            "a": 0.784313738
+          },
+          "Tags": [
+            "Token"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": false,
+          "CustomMesh": {
+            "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
+            "DiffuseURL": "",
+            "NormalURL": "",
+            "ColliderURL": "",
+            "Convex": true,
+            "MaterialIndex": 0,
+            "TypeIndex": 0,
+            "CastShadows": true
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        }
+      ]
     }
   ]
 }
