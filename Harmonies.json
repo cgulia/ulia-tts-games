@@ -1,7 +1,7 @@
 {
   "SaveName": "Harmonies",
-  "EpochTime": 1750246348,
-  "Date": "6/18/2025 1:32:28 PM",
+  "EpochTime": 1750590005,
+  "Date": "6/22/2025 1:00:05 PM",
   "VersionNumber": "v13.3",
   "GameMode": "Harmonies",
   "GameType": "Game",
@@ -277,6 +277,10 @@
       {
         "displayed": "scoreCubeBag",
         "normalized": "scorecubebag"
+      },
+      {
+        "displayed": "spiritScoreCubeBag",
+        "normalized": "spiritscorecubebag"
       }
     ]
   },
@@ -291,7 +295,7 @@
     "TurnColor": ""
   },
   "DecalPallet": [],
-  "LuaScript": "-- https://steamcommunity.com/id/uliadev/ bother me if the script breaks\r\nfunction onLoad()\r\n    setNotes(\"\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\nHarmonies: Re-Scripted [ulia]\")\r\n    allObjects = getAllObjects()\r\n    local tokenBoard = nil\r\n    setupButton = nil\r\n    refillButton = nil\r\n    scoreCubeBag = nil\r\n    cardSlots = {}\r\n    for i, o in ipairs(allObjects) do\r\n        --if o.hasTag(\"Card\") then\r\n        --    local initialPosition = o.getPosition()\r\n        --    local raisePosition = Vector(initialPosition.x, 2.1, initialPosition.z)\r\n        --    o.setPosition(raisePosition)\r\n        --end\r\n        if o.hasTag(\"cardSlot\") then\r\n            o.setColorTint({0,0,0,0.4})\r\n            table.insert(cardSlots, o)\r\n        end\r\n        if o.hasTag(\"Locked\") then\r\n            o.setLock(true)\r\n            o.interactable = false\r\n        end\r\n        if o.hasTag(\"Spirit\") then\r\n            local snapParameters = {\r\n                {\r\n                    position=Vector(-0.82,0.2,-1.35),\r\n                    rotation=Vector(0,0,0),\r\n                    rotation_snap = true,\r\n                    tags={}\r\n                }\r\n            }\r\n            o.setSnapPoints(snapParameters)\r\n            o.setLock(true)\r\n        end\r\n        if o.hasTag(\"Animal\") then\r\n            o.setLock(true)\r\n        end\r\n        if o.hasTag(\"Tokenboard\") then\r\n            tokenBoard = o\r\n        end\r\n        if o.hasTag(\"Setupbutton\") then\r\n            setupButton = o\r\n        end\r\n        if o.hasTag(\"Refillbutton\") then refillButton = o end\r\n        if o.hasTag(\"scoreCubeBag\") then scoreCubeBag = o end\r\n    end\r\n    local tokenBoardRotationOffset = Vector(tokenBoard.getRotation().x, tokenBoard.getRotation().y - 38, tokenBoard.getRotation().z)\r\n    tokenBoard.setRotation(Vector(0, -37, 0))\r\n    spirits = false\r\n    spiritIndex = 0\r\n    animalIndex = 0\r\n    animalPositions = {\r\n        Vector(26.40, 2.1, 9.50),\r\n        Vector(26.40, 2.1, 5.70),\r\n        Vector(26.40, 2.1, 1.90),\r\n        Vector(26.40, 2.1, -1.90),\r\n        Vector(26.40, 2.1, -5.70)\r\n    }\r\n    animalDeckPosition = Vector(26.40, 2, -9.50)\r\n    tokenIndex = 0\r\n    --gameSetup()\r\n    setupUI()\r\nend\r\n\r\nfunction setupUI()\r\n    refillButton.setScale({0,0,0})\r\n    refillButton.setColorTint({1,1,1,0})\r\n    setupButton.setColorTint({1,1,1,0})\r\n    setupButton.setPosition({13.5, 3, 0})\r\n    local setupParams = {\r\n        click_function = \"gameSetup\",\r\n        function_owner = Global,\r\n        label          = \"START GAME\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 2000,\r\n        height         = 500,\r\n        font_size      = 300,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.5, 0.5, 0.5}\r\n    }\r\n    setupButton.createButton(setupParams)\r\n    local refillParams = {\r\n        click_function = \"refillComponents\",\r\n        function_owner = Global,\r\n        label          = \"REFILL STUFF\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 2000,\r\n        height         = 500,\r\n        font_size      = 300,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.5, 0.5, 0.5}\r\n    }\r\n    refillButton.createButton(refillParams)\r\n    local refillCubesParameters = {\r\n        click_function = \"refillCubes\",\r\n        function_owner = Global,\r\n        label          = \"\",\r\n        position       = {0.4, 0.5, -0.6},\r\n        rotation       = {0, 180, 0},\r\n        width          = 1700,\r\n        height         = 1000,\r\n        font_size      = 500,\r\n        color          = {0.843, 0.313, 0.054},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.05, 0.05, 0.05},\r\n        tooltip        = \"Refill Score Cubes\"\r\n    }\r\n    for c, cardSlot in ipairs(cardSlots) do\r\n        cardSlot.createButton(refillCubesParameters)\r\n    end\r\nend\r\n\r\nfunction refillComponents()\r\n    refillAnimals()\r\n    setupTokens()\r\nend\r\n\r\nfunction gameSetup()\r\n    setupButton.setScale({0,0,0})\r\n    setupButton.setPosition({9000,9000,9000})\r\n    refillButton.setScale({5,1,5})\r\n    refillButton.setPosition({13.5, 3, 0})\r\n    pickPlayer()\r\n    Wait.time(function() setupSpirits() end, 0.5, 1)\r\n    Wait.time(function() setupAnimals() end, 1, 1)\r\n    Wait.time(function() setupTokens() end, 1.25, 1)\r\nend\r\n\r\nfunction pickPlayer()\r\n    Turns.enable = true\r\n    Turns.order = {\"Blue\", \"Red\", \"Green\", \"Yellow\"}\r\n    local tokenBoardRotations = {\r\n        {playerColour = \"Red\", rotation = Vector(0,45,0)},\r\n        {playerColour = \"Green\", rotation = Vector(0,135,0)},\r\n        {playerColour = \"Yellow\", rotation = Vector(0,225,0)},\r\n        {playerColour = \"Blue\", rotation = Vector(0,315,0)}\r\n    }\r\n    local seatedPlayers = {}\r\n    for _, player in ipairs(Player.getPlayers()) do\r\n        if player.color ~= \"Black\" then\r\n            if player.color ~= \"Grey\" then\r\n                table.insert(seatedPlayers, player.color)\r\n            end\r\n        end\r\n    end\r\n    local tokenBoard = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Tokenboard\") then\r\n            tokenBoard = o\r\n        end\r\n    end\r\n    local randomSelection = math.random(1, #seatedPlayers)\r\n    local tokenBoardRotation = tokenBoard.getRotation()\r\n    for j, p in ipairs(tokenBoardRotations) do\r\n        if p.playerColour == seatedPlayers[randomSelection] then\r\n            local firstPlayerRotation = tokenBoardRotation:add(p.rotation)\r\n            tokenBoard.setRotation(firstPlayerRotation)\r\n        end\r\n    end\r\n    Turns.turn_color = seatedPlayers[randomSelection]\r\n    printToAll(\"Harmonies: \" .. seatedPlayers[randomSelection] .. \" was selected to go first\")\r\nend\r\n\r\nfunction onChat(message, sender)\r\n    if message == \"!spirits\" then\r\n        if spirits == false then\r\n            setupSpirits()\r\n            spirits = true\r\n        end\r\n    end\r\n    if message == \"!refill\" then\r\n        refillAnimals()\r\n    end\r\nend\r\n\r\n\r\nfunction setupSpirits()\r\n    local spiritCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Spirit\") then\r\n            s.setLock(false)\r\n            table.insert(spiritCards, s)\r\n            s.setPosition({-36.1, 0.1 + (i / 30), 0})\r\n        end\r\n    end\r\n    local groupedSpirits = group(spiritCards)\r\n    groupedSpirits[1].setPosition({-17, 2.1, 0})\r\n    Wait.frames(function() groupedSpirits[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedSpirits[1].randomize() end, 30, 1)\r\n    local dealOrder = {\r\n        \"Red\",\r\n        \"Blue\",\r\n        \"Green\",\r\n        \"Yellow\",\r\n        \"Red\",\r\n        \"Blue\",\r\n        \"Green\",\r\n        \"Yellow\",\r\n    }\r\n    Wait.time(function() Wait.time(function() spiritsCycle(groupedSpirits[1], dealOrder) end, 0.2, 8) end, 0.75, 1)\r\nend\r\n\r\nfunction spiritsCycle(deck, order)\r\n    spiritIndex = spiritIndex + 1\r\n    --for _, player in ipairs(Player.getPlayers()) do\r\n    --    if player.color == order[spiritIndex] then\r\n    --        deck.deal(1, order[spiritIndex])\r\n    --    end\r\n    --end\r\n    deck.deal(1, order[spiritIndex])\r\nend\r\n\r\nfunction setupAnimals()\r\n    local animalCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Animal\") then\r\n            s.setLock(false)\r\n            table.insert(animalCards, s)\r\n            s.setPosition(Vector(animalDeckPosition.x, animalDeckPosition.y + (i / 30), animalDeckPosition.z))\r\n        end\r\n    end\r\n    local groupedAnimals = group(animalCards)\r\n    groupedAnimals[1].setPosition(animalDeckPosition)\r\n    Wait.frames(function() groupedAnimals[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedAnimals[1].randomize() end, 30, 1)\r\n    Wait.time(function() Wait.time(function() dealAnimalsCycle(groupedAnimals[1], animalPositions) end, 0.1, 5) end, 0.75, 1)\r\nend\r\n\r\nfunction dealAnimalsCycle(deck, position)\r\n    animalIndex = animalIndex + 1\r\n    local params = {\r\n        position = animalPositions[animalIndex],\r\n        flip = true\r\n    }\r\n    local takenObject = deck.takeObject(params)\r\nend\r\n\r\nfunction setupTokens()\r\n    local tokenBag = nil\r\n    local tokenBoard = nil\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Tokenbag\") then\r\n            tokenBag = s\r\n        end\r\n        if s.hasTag(\"Tokenboard\") then\r\n            tokenBoard = s\r\n        end\r\n    end\r\n    tokenBag.randomize()\r\n    local tokenSnaps = tokenBoard.getSnapPoints()\r\n    local emptySnaps = {}\r\n    for i, s in ipairs(tokenSnaps) do\r\n        --log(s.position)\r\n        --log(\"\\n\")\r\n        --Player[\"White\"].pingTable(tokenBoard.positionToWorld(s.position))\r\n        local snapPos = tokenBoard.positionToWorld(s.position)\r\n        local ray = findObjects(snapPos)\r\n        if ray[1].hit_object.hasTag(\"Tokenboard\") then\r\n            table.insert(emptySnaps, Vector(tokenBoard.positionToWorld(s.position)))\r\n        end\r\n    end\r\n    tokenIndex = 0\r\n    if #emptySnaps > 0 then\r\n        Wait.time(function() refillTokens(tokenBag, emptySnaps) end, 0.1, #emptySnaps)\r\n    end\r\nend\r\n\r\nfunction refillTokens(bag, positions)\r\n    tokenIndex = tokenIndex + 1\r\n    local params = {\r\n        position = Vector(positions[tokenIndex].x, positions[tokenIndex].y + 0.5, positions[tokenIndex].z),\r\n    }\r\n    local takenObject = bag.takeObject(params)\r\nend\r\n\r\nfunction refillAnimals()\r\n    allObjects = getAllObjects()\r\n    local animalDeck = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Animal\") then\r\n            if o.tag == \"Deck\" then\r\n                animalDeck = o\r\n            end\r\n        end\r\n    end\r\n    local emptyAnimals = {}\r\n    for i, p in ipairs(animalPositions) do\r\n        if findObjects(p)[1].hit_object.tag ~= \"Card\" then\r\n            local params = {position = p, flip = true}\r\n            animalDeck.takeObject(params)\r\n        end\r\n    end\r\nend\r\n\r\nfunction refillCubes(object, player, alt)\r\n    local pos = Vector(object.getPosition())\r\n    local posOffset = pos:add(Vector(0,5,0))\r\n    local findCard = findObjects(posOffset)\r\n    local card = nil\r\n    local cardSnaps = nil\r\n    for o, object in ipairs(findCard) do\r\n        if object.hit_object.hasTag(\"Animal\") then\r\n            card = object.hit_object\r\n            cardSnaps = object.hit_object.getSnapPoints()\r\n        end\r\n    end\r\n    local findCubes = findCast(pos,Vector(3.7,1,6.2),3)\r\n    for c, cube in ipairs(findCubes) do\r\n        if cube.hit_object.hasTag(\"Token\") then\r\n            cube.hit_object.destruct()\r\n        end\r\n    end\r\n    for s, snap in ipairs(cardSnaps) do\r\n        local pos = Vector(card.positionToWorld(snap.position)):add(Vector(0,1,0))\r\n        scoreCubeBag.takeObject({position=pos})\r\n    end\r\nend\r\n\r\nfunction findObjects(pos)\r\n    local hitList = Physics.cast({\r\n        origin       = pos,\r\n        direction    = {0,-1,0},\r\n        type         = 3,\r\n        size         = {0.1,0.1,0.1},\r\n        max_distance = 100,\r\n        debug        = false,\r\n    })\r\n    return hitList\r\nend\r\n\r\nfunction findCast(pos,size,type)\r\n    local hitList = Physics.cast({\r\n        origin       = pos,\r\n        direction    = {0,-1,0},\r\n        type         = type,\r\n        size         = size,\r\n        max_distance = 100,\r\n        debug        = false,\r\n    })\r\n    return hitList\r\nend",
+  "LuaScript": "-- https://steamcommunity.com/id/uliadev/ bother me if the script breaks\r\nfunction onLoad()\r\n    setNotes(\"\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\nHarmonies: Re-Scripted [ulia]\")\r\n    allObjects = getAllObjects()\r\n    local tokenBoard = nil\r\n    setupButton = nil\r\n    refillButton = nil\r\n    scoreCubeBag = nil\r\n    spiritScoreCubeBag = nil\r\n    cardSlots = {}\r\n    for i, o in ipairs(allObjects) do\r\n        --if o.hasTag(\"Card\") then\r\n        --    local initialPosition = o.getPosition()\r\n        --    local raisePosition = Vector(initialPosition.x, 2.1, initialPosition.z)\r\n        --    o.setPosition(raisePosition)\r\n        --end\r\n        if o.hasTag(\"cardSlot\") then\r\n            o.setColorTint({0,0,0,0.4})\r\n            table.insert(cardSlots, o)\r\n        end\r\n        if o.hasTag(\"Locked\") then\r\n            o.setLock(true)\r\n            o.interactable = false\r\n        end\r\n        if o.hasTag(\"Spirit\") then\r\n            local snapParameters = {\r\n                {\r\n                    position=Vector(-0.82,0.2,-1.35),\r\n                    rotation=Vector(0,0,0),\r\n                    rotation_snap = true,\r\n                    tags={}\r\n                }\r\n            }\r\n            o.setSnapPoints(snapParameters)\r\n            o.setLock(true)\r\n        end\r\n        if o.hasTag(\"Animal\") then o.setLock(true) end\r\n        if o.hasTag(\"Tokenboard\") then tokenBoard = o end\r\n        if o.hasTag(\"Setupbutton\") then setupButton = o end\r\n        if o.hasTag(\"Refillbutton\") then refillButton = o end\r\n        if o.hasTag(\"scoreCubeBag\") then scoreCubeBag = o end\r\n        if o.hasTag(\"spiritScoreCubeBag\") then spiritScoreCubeBag = o end\r\n    end\r\n    local tokenBoardRotationOffset = Vector(tokenBoard.getRotation().x, tokenBoard.getRotation().y - 38, tokenBoard.getRotation().z)\r\n    tokenBoard.setRotation(Vector(0, -37, 0))\r\n    spirits = false\r\n    spiritIndex = 0\r\n    animalIndex = 0\r\n    animalPositions = {\r\n        Vector(26.40, 2.1, 9.50),\r\n        Vector(26.40, 2.1, 5.70),\r\n        Vector(26.40, 2.1, 1.90),\r\n        Vector(26.40, 2.1, -1.90),\r\n        Vector(26.40, 2.1, -5.70)\r\n    }\r\n    animalDeckPosition = Vector(26.40, 2, -9.50)\r\n    tokenIndex = 0\r\n    --gameSetup()\r\n    setupUI()\r\nend\r\n\r\nfunction setupUI()\r\n    refillButton.setScale({0,0,0})\r\n    refillButton.setColorTint({1,1,1,0})\r\n    setupButton.setColorTint({1,1,1,0})\r\n    setupButton.setPosition({13.5, 3, 0})\r\n    local setupParams = {\r\n        click_function = \"gameSetup\",\r\n        function_owner = Global,\r\n        label          = \"START GAME\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 2000,\r\n        height         = 500,\r\n        font_size      = 300,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.5, 0.5, 0.5}\r\n    }\r\n    setupButton.createButton(setupParams)\r\n    local refillParams = {\r\n        click_function = \"refillComponents\",\r\n        function_owner = Global,\r\n        label          = \"REFILL STUFF\",\r\n        position       = {0, -0.5, 0},\r\n        rotation       = {0, 180, 0},\r\n        width          = 2000,\r\n        height         = 500,\r\n        font_size      = 300,\r\n        color          = {1, 1, 1},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.5, 0.5, 0.5}\r\n    }\r\n    refillButton.createButton(refillParams)\r\n    local refillCubesParameters = {\r\n        click_function = \"refillCubes\",\r\n        function_owner = Global,\r\n        label          = \"\",\r\n        position       = {0.4, 0.5, -0.6},\r\n        rotation       = {0, 180, 0},\r\n        width          = 1700,\r\n        height         = 1000,\r\n        font_size      = 500,\r\n        color          = {0.843, 0.313, 0.054},\r\n        font_color     = {0.2, 0.2, 0.2},\r\n        scale          = {0.05, 0.05, 0.05},\r\n        tooltip        = \"Refill Score Cubes\"\r\n    }\r\n    for c, cardSlot in ipairs(cardSlots) do\r\n        cardSlot.createButton(refillCubesParameters)\r\n    end\r\nend\r\n\r\nfunction refillComponents()\r\n    refillAnimals()\r\n    setupTokens()\r\nend\r\n\r\nfunction gameSetup()\r\n    setupButton.setScale({0,0,0})\r\n    setupButton.setPosition({9000,9000,9000})\r\n    refillButton.setScale({5,1,5})\r\n    refillButton.setPosition({13.5, 3, 0})\r\n    pickPlayer()\r\n    Wait.time(function() setupSpirits() end, 0.5, 1)\r\n    Wait.time(function() setupAnimals() end, 1, 1)\r\n    Wait.time(function() setupTokens() end, 1.25, 1)\r\nend\r\n\r\nfunction pickPlayer()\r\n    Turns.enable = true\r\n    Turns.order = {\"Blue\", \"Red\", \"Green\", \"Yellow\"}\r\n    local tokenBoardRotations = {\r\n        {playerColour = \"Red\", rotation = Vector(0,45,0)},\r\n        {playerColour = \"Green\", rotation = Vector(0,135,0)},\r\n        {playerColour = \"Yellow\", rotation = Vector(0,225,0)},\r\n        {playerColour = \"Blue\", rotation = Vector(0,315,0)}\r\n    }\r\n    local seatedPlayers = {}\r\n    for _, player in ipairs(Player.getPlayers()) do\r\n        if player.color ~= \"Black\" then\r\n            if player.color ~= \"Grey\" then\r\n                table.insert(seatedPlayers, player.color)\r\n            end\r\n        end\r\n    end\r\n    local tokenBoard = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Tokenboard\") then\r\n            tokenBoard = o\r\n        end\r\n    end\r\n    local randomSelection = math.random(1, #seatedPlayers)\r\n    local tokenBoardRotation = tokenBoard.getRotation()\r\n    for j, p in ipairs(tokenBoardRotations) do\r\n        if p.playerColour == seatedPlayers[randomSelection] then\r\n            local firstPlayerRotation = tokenBoardRotation:add(p.rotation)\r\n            tokenBoard.setRotation(firstPlayerRotation)\r\n        end\r\n    end\r\n    Turns.turn_color = seatedPlayers[randomSelection]\r\n    printToAll(\"Harmonies: \" .. seatedPlayers[randomSelection] .. \" was selected to go first\")\r\nend\r\n\r\nfunction onChat(message, sender)\r\n    if message == \"!spirits\" then\r\n        if spirits == false then\r\n            setupSpirits()\r\n            spirits = true\r\n        end\r\n    end\r\n    if message == \"!refill\" then\r\n        refillAnimals()\r\n    end\r\nend\r\n\r\n\r\nfunction setupSpirits()\r\n    local spiritCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Spirit\") then\r\n            s.setLock(false)\r\n            table.insert(spiritCards, s)\r\n            s.setPosition({-36.1, 0.1 + (i / 30), 0})\r\n        end\r\n    end\r\n    local groupedSpirits = group(spiritCards)\r\n    groupedSpirits[1].setPosition({-17, 2.1, 0})\r\n    Wait.frames(function() groupedSpirits[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedSpirits[1].randomize() end, 30, 1)\r\n    local dealOrder = {\r\n        \"Red\",\r\n        \"Blue\",\r\n        \"Green\",\r\n        \"Yellow\",\r\n        \"Red\",\r\n        \"Blue\",\r\n        \"Green\",\r\n        \"Yellow\",\r\n    }\r\n    Wait.time(function() Wait.time(function() spiritsCycle(groupedSpirits[1], dealOrder) end, 0.2, 8) end, 0.75, 1)\r\nend\r\n\r\nfunction spiritsCycle(deck, order)\r\n    spiritIndex = spiritIndex + 1\r\n    --for _, player in ipairs(Player.getPlayers()) do\r\n    --    if player.color == order[spiritIndex] then\r\n    --        deck.deal(1, order[spiritIndex])\r\n    --    end\r\n    --end\r\n    deck.deal(1, order[spiritIndex])\r\nend\r\n\r\nfunction setupAnimals()\r\n    local animalCards = {}\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Animal\") then\r\n            s.setLock(false)\r\n            table.insert(animalCards, s)\r\n            s.setPosition(Vector(animalDeckPosition.x, animalDeckPosition.y + (i / 30), animalDeckPosition.z))\r\n        end\r\n    end\r\n    local groupedAnimals = group(animalCards)\r\n    groupedAnimals[1].setPosition(animalDeckPosition)\r\n    Wait.frames(function() groupedAnimals[1].flip() end, 15, 1)\r\n    Wait.frames(function() groupedAnimals[1].randomize() end, 30, 1)\r\n    Wait.time(function() Wait.time(function() dealAnimalsCycle(groupedAnimals[1], animalPositions) end, 0.1, 5) end, 0.75, 1)\r\nend\r\n\r\nfunction dealAnimalsCycle(deck, position)\r\n    animalIndex = animalIndex + 1\r\n    local params = {\r\n        position = animalPositions[animalIndex],\r\n        flip = true\r\n    }\r\n    local takenObject = deck.takeObject(params)\r\nend\r\n\r\nfunction setupTokens()\r\n    local tokenBag = nil\r\n    local tokenBoard = nil\r\n    for i, s in ipairs(allObjects) do\r\n        if s.hasTag(\"Tokenbag\") then\r\n            tokenBag = s\r\n        end\r\n        if s.hasTag(\"Tokenboard\") then\r\n            tokenBoard = s\r\n        end\r\n    end\r\n    tokenBag.randomize()\r\n    local tokenSnaps = tokenBoard.getSnapPoints()\r\n    local emptySnaps = {}\r\n    for i, s in ipairs(tokenSnaps) do\r\n        --log(s.position)\r\n        --log(\"\\n\")\r\n        --Player[\"White\"].pingTable(tokenBoard.positionToWorld(s.position))\r\n        local snapPos = tokenBoard.positionToWorld(s.position)\r\n        local ray = findObjects(snapPos)\r\n        if ray[1].hit_object.hasTag(\"Tokenboard\") then\r\n            table.insert(emptySnaps, Vector(tokenBoard.positionToWorld(s.position)))\r\n        end\r\n    end\r\n    tokenIndex = 0\r\n    if #emptySnaps > 0 then\r\n        Wait.time(function() refillTokens(tokenBag, emptySnaps) end, 0.1, #emptySnaps)\r\n    end\r\nend\r\n\r\nfunction refillTokens(bag, positions)\r\n    tokenIndex = tokenIndex + 1\r\n    local params = {\r\n        position = Vector(positions[tokenIndex].x, positions[tokenIndex].y + 0.5, positions[tokenIndex].z),\r\n    }\r\n    local takenObject = bag.takeObject(params)\r\nend\r\n\r\nfunction refillAnimals()\r\n    allObjects = getAllObjects()\r\n    local animalDeck = nil\r\n    for i, o in ipairs(allObjects) do\r\n        if o.hasTag(\"Animal\") then\r\n            if o.tag == \"Deck\" then\r\n                animalDeck = o\r\n            end\r\n        end\r\n    end\r\n    local emptyAnimals = {}\r\n    for i, p in ipairs(animalPositions) do\r\n        if findObjects(p)[1].hit_object.tag ~= \"Card\" then\r\n            local params = {position = p, flip = true}\r\n            animalDeck.takeObject(params)\r\n        end\r\n    end\r\nend\r\n\r\nfunction refillCubes(object, player, alt)\r\n    local pos = Vector(object.getPosition())\r\n    local posOffset = pos:add(Vector(0,5,0))\r\n    local findCard = findObjects(posOffset)\r\n    local animalCard = nil\r\n    local spiritCard = nil\r\n    local cardSnaps = nil\r\n    for o, object in ipairs(findCard) do\r\n        if object.hit_object.hasTag(\"Animal\") then\r\n            animalCard = object.hit_object\r\n            cardSnaps = object.hit_object.getSnapPoints()\r\n        end\r\n    end\r\n    for o, object in ipairs(findCard) do\r\n        if object.hit_object.hasTag(\"Spirit\") then\r\n            spiritCard = object.hit_object\r\n            cardSnaps = object.hit_object.getSnapPoints()\r\n        end\r\n    end\r\n    if animalCard ~= nil then\r\n        local findCubes = findCast(pos,Vector(3.7,1,6.2),3)\r\n        for c, cube in ipairs(findCubes) do\r\n            if cube.hit_object.hasTag(\"Token\") then\r\n                cube.hit_object.destruct()\r\n            end\r\n        end\r\n        for s, snap in ipairs(cardSnaps) do\r\n            local pos = Vector(animalCard.positionToWorld(snap.position)):add(Vector(0,1,0))\r\n            scoreCubeBag.takeObject({position=pos})\r\n        end\r\n    end\r\n    if spiritCard ~= nil then\r\n        local findCubes = findCast(pos,Vector(3.7,1,6.2),3)\r\n        for c, cube in ipairs(findCubes) do\r\n            if cube.hit_object.hasTag(\"Token\") then\r\n                cube.hit_object.destruct()\r\n            end\r\n        end\r\n        for s, snap in ipairs(cardSnaps) do\r\n            local pos = Vector(spiritCard.positionToWorld(snap.position)):add(Vector(0,1,0))\r\n            spiritScoreCubeBag.takeObject({position=pos})\r\n        end\r\n    end\r\nend\r\n\r\nfunction findObjects(pos)\r\n    local hitList = Physics.cast({\r\n        origin       = pos,\r\n        direction    = {0,-1,0},\r\n        type         = 3,\r\n        size         = {0.1,0.1,0.1},\r\n        max_distance = 100,\r\n        debug        = false,\r\n    })\r\n    return hitList\r\nend\r\n\r\nfunction findCast(pos,size,type)\r\n    local hitList = Physics.cast({\r\n        origin       = pos,\r\n        direction    = {0,-1,0},\r\n        type         = type,\r\n        size         = size,\r\n        max_distance = 100,\r\n        debug        = false,\r\n    })\r\n    return hitList\r\nend",
   "LuaScriptState": "",
   "XmlUI": "<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->",
   "SnapPoints": [
@@ -346,7 +350,7 @@
       "Rotation": {
         "x": -9.03278E-08,
         "y": 359.559174,
-        "z": -1.69529557E-07
+        "z": -1.695296E-07
       }
     },
     {
@@ -368,9 +372,9 @@
         "z": -11.0000143
       },
       "Rotation": {
-        "x": 5.517094E-08,
+        "x": 5.51709576E-08,
         "y": 180.026474,
-        "z": 3.084571E-07
+        "z": 3.08457174E-07
       }
     },
     {
@@ -502,7 +506,7 @@
       "Rotation": {
         "x": -2.00008927E-07,
         "y": 0.3941535,
-        "z": -2.14567848E-07
+        "z": -2.14567777E-07
       }
     },
     {
@@ -811,66 +815,6 @@
       "HideWhenFaceDown": false,
       "Hands": false,
       "FogColor": "Yellow",
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "c57b1d",
-      "Name": "Custom_Model",
-      "Transform": {
-        "posX": 20.90008,
-        "posY": 2.25,
-        "posZ": -18.05007,
-        "rotX": -8.6322194E-05,
-        "rotY": 179.998123,
-        "rotZ": -2.10222333E-05,
-        "scaleX": 0.25,
-        "scaleY": 0.25,
-        "scaleZ": 0.25
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.9137255,
-        "g": 0.9137255,
-        "b": 0.9137255,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Red",
-        "Token"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 0,
-        "CastShadows": true
-      },
       "LuaScript": "",
       "LuaScriptState": "",
       "XmlUI": ""
@@ -7894,12 +7838,12 @@
       "GUID": "56b811",
       "Name": "Custom_Tile",
       "Transform": {
-        "posX": -36.00001,
-        "posY": 2.00000262,
-        "posZ": -16.0000038,
-        "rotX": 8.013228E-07,
-        "rotY": 180.002747,
-        "rotZ": 2.8348606E-07,
+        "posX": -36.000042,
+        "posY": 2.00001383,
+        "posZ": -16.0000153,
+        "rotX": -2.14642455E-07,
+        "rotY": 180.002777,
+        "rotZ": -3.58931054E-08,
         "scaleX": 5.670261,
         "scaleY": 1.0,
         "scaleZ": 5.670261
@@ -7951,11 +7895,11 @@
       "GUID": "9f9556",
       "Name": "Custom_PDF",
       "Transform": {
-        "posX": -36.0000076,
-        "posY": 2.20000768,
-        "posZ": 16.0000038,
-        "rotX": 7.843755E-07,
-        "rotY": 180.0242,
+        "posX": -36.00011,
+        "posY": 2.20000219,
+        "posZ": 16.0000534,
+        "rotX": 2.41485537E-07,
+        "rotY": 180.024216,
         "rotZ": 180.0,
         "scaleX": 3.0,
         "scaleY": 1.0,
@@ -8002,12 +7946,12 @@
       "GUID": "a7710a",
       "Name": "CardCustom",
       "Transform": {
-        "posX": 2.15319E-05,
-        "posY": 2.1,
-        "posZ": -19.0007267,
-        "rotX": 4.11916261E-08,
+        "posX": 2.17747547E-05,
+        "posY": 2.01360917,
+        "posZ": -19.0007324,
+        "rotX": 2.69274864E-07,
         "rotY": 180.0007,
-        "rotZ": 1.640163E-08,
+        "rotZ": 7.25369148E-07,
         "scaleX": 2.5,
         "scaleY": 1.0,
         "scaleZ": 2.5
@@ -8027,7 +7971,7 @@
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": true,
+      "Locked": false,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -8055,128 +7999,6 @@
       "LuaScript": "",
       "LuaScriptState": "",
       "XmlUI": ""
-    },
-    {
-      "GUID": "72720f",
-      "Name": "Custom_Model_Infinite_Bag",
-      "Transform": {
-        "posX": 20.89967,
-        "posY": 2.55,
-        "posZ": -16.1500034,
-        "rotX": 2.11526412E-06,
-        "rotY": 179.999878,
-        "rotZ": -6.430596E-06,
-        "scaleX": 0.5500004,
-        "scaleY": 0.5500004,
-        "scaleZ": 0.5500004
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.8397212,
-        "g": 0.313552856,
-        "b": 0.0541255474,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Blue"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "MaterialIndex": -1,
-      "MeshIndex": -1,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 7,
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": "",
-      "ContainedObjects": [
-        {
-          "GUID": "67c588",
-          "Name": "Custom_Model",
-          "Transform": {
-            "posX": -15.9757071,
-            "posY": 2.34385347,
-            "posZ": -20.53039,
-            "rotX": 7.798893E-05,
-            "rotY": 0.001642834,
-            "rotZ": 3.73435869E-05,
-            "scaleX": 0.250000417,
-            "scaleY": 0.250000417,
-            "scaleZ": 0.250000417
-          },
-          "Nickname": "",
-          "Description": "",
-          "GMNotes": "",
-          "AltLookAngle": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "ColorDiffuse": {
-            "r": 0.8397212,
-            "g": 0.313556671,
-            "b": 0.0541282371,
-            "a": 0.784313738
-          },
-          "Tags": [
-            "Token"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": true,
-          "GridProjection": false,
-          "HideWhenFaceDown": false,
-          "Hands": false,
-          "CustomMesh": {
-            "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-            "DiffuseURL": "",
-            "NormalURL": "",
-            "ColliderURL": "",
-            "Convex": true,
-            "MaterialIndex": 0,
-            "TypeIndex": 0,
-            "CastShadows": true
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        }
-      ]
     },
     {
       "GUID": "0438e5",
@@ -8394,66 +8216,6 @@
           }
         }
       ]
-    },
-    {
-      "GUID": "412f48",
-      "Name": "Custom_Model",
-      "Transform": {
-        "posX": -20.9000854,
-        "posY": 2.25,
-        "posZ": -18.0500717,
-        "rotX": -0.000141577955,
-        "rotY": 180.017639,
-        "rotZ": -5.49090146E-05,
-        "scaleX": 0.25,
-        "scaleY": 0.25,
-        "scaleZ": 0.25
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.9137255,
-        "g": 0.9137255,
-        "b": 0.9137255,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Blue",
-        "Token"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 0,
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
     },
     {
       "GUID": "e179c1",
@@ -9439,8 +9201,8 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.130639166,
-        "g": 0.40231207,
+        "r": 0.130638987,
+        "g": 0.402311862,
         "b": 0.531358838
       },
       "Tags": [
@@ -12064,12 +11826,12 @@
       "GUID": "a71bdb",
       "Name": "CardCustom",
       "Transform": {
-        "posX": -1.44594705E-05,
-        "posY": 2.1,
-        "posZ": 18.9990788,
-        "rotX": 7.19145845E-08,
-        "rotY": -0.003096713,
-        "rotZ": 1.77343466E-07,
+        "posX": -1.46702641E-05,
+        "posY": 2.01360917,
+        "posZ": 18.9990826,
+        "rotX": -1.52324855E-08,
+        "rotY": -0.003098862,
+        "rotZ": -1.61730014E-07,
         "scaleX": 2.5,
         "scaleY": 1.0,
         "scaleZ": 2.5
@@ -12089,7 +11851,7 @@
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
-      "Locked": true,
+      "Locked": false,
       "Grid": true,
       "Snap": true,
       "IgnoreFoW": false,
@@ -12977,9 +12739,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13101,9 +12863,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13195,9 +12957,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13304,9 +13066,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13443,9 +13205,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13537,9 +13299,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13661,9 +13423,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13754,9 +13516,9 @@
         "posX": 33.0001144,
         "posY": 2.1,
         "posZ": 2.59063484E-07,
-        "rotX": 4.12199874E-08,
+        "rotX": 4.122002E-08,
         "rotY": 269.998932,
-        "rotZ": 3.341216E-08,
+        "rotZ": 3.341217E-08,
         "scaleX": 2.0,
         "scaleY": 1.0,
         "scaleZ": 2.0
@@ -13770,9 +13532,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13879,9 +13641,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -13973,9 +13735,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14082,9 +13844,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14191,9 +13953,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14300,9 +14062,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14439,9 +14201,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14533,9 +14295,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14642,9 +14404,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14766,9 +14528,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14812,7 +14574,7 @@
             "z": -1.39395714
           },
           "Rotation": {
-            "x": -2.291237E-06,
+            "x": -2.29123771E-06,
             "y": 359.967377,
             "z": 9.872597E-07
           },
@@ -14860,9 +14622,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -14984,9 +14746,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15093,9 +14855,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15217,9 +14979,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15326,9 +15088,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15435,9 +15197,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15544,9 +15306,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15638,9 +15400,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15747,9 +15509,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15841,9 +15603,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -15902,7 +15664,7 @@
             "z": -1.37437117
           },
           "Rotation": {
-            "x": -1.213288E-06,
+            "x": -1.21328833E-06,
             "y": 359.9864,
             "z": -2.51854235E-08
           },
@@ -15935,9 +15697,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -16044,9 +15806,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -16153,9 +15915,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -16247,9 +16009,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -16308,7 +16070,7 @@
             "z": -0.887024343
           },
           "Rotation": {
-            "x": -1.991914E-07,
+            "x": -1.99191447E-07,
             "y": 359.9854,
             "z": 2.933459E-07
           },
@@ -16356,9 +16118,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.129409671,
-        "g": 0.1254881,
-        "b": 0.09411552
+        "r": 0.129409581,
+        "g": 0.125488013,
+        "b": 0.09411543
       },
       "Tags": [
         "Animal",
@@ -16441,492 +16203,6 @@
           ]
         }
       ]
-    },
-    {
-      "GUID": "db2eae",
-      "Name": "Custom_Model_Infinite_Bag",
-      "Transform": {
-        "posX": -20.9000244,
-        "posY": 2.550005,
-        "posZ": -16.1500168,
-        "rotX": 1.531817E-05,
-        "rotY": 179.999649,
-        "rotZ": -1.70766252E-05,
-        "scaleX": 0.5500004,
-        "scaleY": 0.5500004,
-        "scaleZ": 0.5500004
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.8397212,
-        "g": 0.313552856,
-        "b": 0.0541255474,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Blue"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": false,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "MaterialIndex": -1,
-      "MeshIndex": -1,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 7,
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": "",
-      "ContainedObjects": [
-        {
-          "GUID": "67c588",
-          "Name": "Custom_Model",
-          "Transform": {
-            "posX": -15.9757071,
-            "posY": 2.34385347,
-            "posZ": -20.53039,
-            "rotX": 7.798893E-05,
-            "rotY": 0.001642834,
-            "rotZ": 3.73435869E-05,
-            "scaleX": 0.250000417,
-            "scaleY": 0.250000417,
-            "scaleZ": 0.250000417
-          },
-          "Nickname": "",
-          "Description": "",
-          "GMNotes": "",
-          "AltLookAngle": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "ColorDiffuse": {
-            "r": 0.8397212,
-            "g": 0.313556671,
-            "b": 0.0541282371,
-            "a": 0.784313738
-          },
-          "Tags": [
-            "Token"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": true,
-          "GridProjection": false,
-          "HideWhenFaceDown": false,
-          "Hands": false,
-          "CustomMesh": {
-            "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-            "DiffuseURL": "",
-            "NormalURL": "",
-            "ColliderURL": "",
-            "Convex": true,
-            "MaterialIndex": 0,
-            "TypeIndex": 0,
-            "CastShadows": true
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        }
-      ]
-    },
-    {
-      "GUID": "39d148",
-      "Name": "Custom_Model_Infinite_Bag",
-      "Transform": {
-        "posX": -20.9000053,
-        "posY": 2.55,
-        "posZ": 16.1500034,
-        "rotX": 1.50529995E-05,
-        "rotY": 179.999817,
-        "rotZ": -2.19515186E-05,
-        "scaleX": 0.5500004,
-        "scaleY": 0.5500004,
-        "scaleZ": 0.5500004
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.8397212,
-        "g": 0.313552856,
-        "b": 0.0541255474,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Blue"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "MaterialIndex": -1,
-      "MeshIndex": -1,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 7,
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": "",
-      "ContainedObjects": [
-        {
-          "GUID": "67c588",
-          "Name": "Custom_Model",
-          "Transform": {
-            "posX": -15.9757071,
-            "posY": 2.34385347,
-            "posZ": -20.53039,
-            "rotX": 7.798893E-05,
-            "rotY": 0.001642834,
-            "rotZ": 3.73435869E-05,
-            "scaleX": 0.250000417,
-            "scaleY": 0.250000417,
-            "scaleZ": 0.250000417
-          },
-          "Nickname": "",
-          "Description": "",
-          "GMNotes": "",
-          "AltLookAngle": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "ColorDiffuse": {
-            "r": 0.8397212,
-            "g": 0.313556671,
-            "b": 0.0541282371,
-            "a": 0.784313738
-          },
-          "Tags": [
-            "Token"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": true,
-          "GridProjection": false,
-          "HideWhenFaceDown": false,
-          "Hands": false,
-          "CustomMesh": {
-            "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-            "DiffuseURL": "",
-            "NormalURL": "",
-            "ColliderURL": "",
-            "Convex": true,
-            "MaterialIndex": 0,
-            "TypeIndex": 0,
-            "CastShadows": true
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        }
-      ]
-    },
-    {
-      "GUID": "4f6ebd",
-      "Name": "Custom_Model",
-      "Transform": {
-        "posX": -20.9000778,
-        "posY": 2.25,
-        "posZ": 18.0500832,
-        "rotX": -6.352204E-05,
-        "rotY": 180.017441,
-        "rotZ": -1.906827E-05,
-        "scaleX": 0.25,
-        "scaleY": 0.25,
-        "scaleZ": 0.25
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.9137255,
-        "g": 0.9137255,
-        "b": 0.9137255,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Blue",
-        "Token"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 0,
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
-    },
-    {
-      "GUID": "b8d27a",
-      "Name": "Custom_Model_Infinite_Bag",
-      "Transform": {
-        "posX": 20.9000053,
-        "posY": 2.55,
-        "posZ": 16.1500053,
-        "rotX": -6.304047E-06,
-        "rotY": 179.999741,
-        "rotZ": 2.9906616E-05,
-        "scaleX": 0.5500004,
-        "scaleY": 0.5500004,
-        "scaleZ": 0.5500004
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.8397212,
-        "g": 0.313552856,
-        "b": 0.0541255474,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Blue"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "MaterialIndex": -1,
-      "MeshIndex": -1,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 7,
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": "",
-      "ContainedObjects": [
-        {
-          "GUID": "67c588",
-          "Name": "Custom_Model",
-          "Transform": {
-            "posX": -15.9757071,
-            "posY": 2.34385347,
-            "posZ": -20.53039,
-            "rotX": 7.798893E-05,
-            "rotY": 0.001642834,
-            "rotZ": 3.73435869E-05,
-            "scaleX": 0.250000417,
-            "scaleY": 0.250000417,
-            "scaleZ": 0.250000417
-          },
-          "Nickname": "",
-          "Description": "",
-          "GMNotes": "",
-          "AltLookAngle": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-          },
-          "ColorDiffuse": {
-            "r": 0.8397212,
-            "g": 0.313556671,
-            "b": 0.0541282371,
-            "a": 0.784313738
-          },
-          "Tags": [
-            "Token"
-          ],
-          "LayoutGroupSortIndex": 0,
-          "Value": 0,
-          "Locked": false,
-          "Grid": true,
-          "Snap": true,
-          "IgnoreFoW": false,
-          "MeasureMovement": false,
-          "DragSelectable": true,
-          "Autoraise": true,
-          "Sticky": true,
-          "Tooltip": true,
-          "GridProjection": false,
-          "HideWhenFaceDown": false,
-          "Hands": false,
-          "CustomMesh": {
-            "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-            "DiffuseURL": "",
-            "NormalURL": "",
-            "ColliderURL": "",
-            "Convex": true,
-            "MaterialIndex": 0,
-            "TypeIndex": 0,
-            "CastShadows": true
-          },
-          "LuaScript": "",
-          "LuaScriptState": "",
-          "XmlUI": ""
-        }
-      ]
-    },
-    {
-      "GUID": "243ffc",
-      "Name": "Custom_Model",
-      "Transform": {
-        "posX": 20.9000931,
-        "posY": 2.25,
-        "posZ": 18.0500717,
-        "rotX": -3.94342751E-05,
-        "rotY": 180.018692,
-        "rotZ": 2.709414E-05,
-        "scaleX": 0.25,
-        "scaleY": 0.25,
-        "scaleZ": 0.25
-      },
-      "Nickname": "",
-      "Description": "",
-      "GMNotes": "",
-      "AltLookAngle": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "ColorDiffuse": {
-        "r": 0.9137255,
-        "g": 0.9137255,
-        "b": 0.9137255,
-        "a": 0.784313738
-      },
-      "Tags": [
-        "Blue",
-        "Token"
-      ],
-      "LayoutGroupSortIndex": 0,
-      "Value": 0,
-      "Locked": true,
-      "Grid": true,
-      "Snap": true,
-      "IgnoreFoW": false,
-      "MeasureMovement": false,
-      "DragSelectable": true,
-      "Autoraise": true,
-      "Sticky": true,
-      "Tooltip": true,
-      "GridProjection": false,
-      "HideWhenFaceDown": false,
-      "Hands": false,
-      "CustomMesh": {
-        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
-        "DiffuseURL": "",
-        "NormalURL": "",
-        "ColliderURL": "",
-        "Convex": true,
-        "MaterialIndex": 0,
-        "TypeIndex": 0,
-        "CastShadows": true
-      },
-      "LuaScript": "",
-      "LuaScriptState": "",
-      "XmlUI": ""
     },
     {
       "GUID": "90fcfb",
@@ -17485,7 +16761,7 @@
         "posZ": 11.0000172,
         "rotX": 4.277727E-08,
         "rotY": 359.938,
-        "rotZ": -1.07393521E-06,
+        "rotZ": -1.07393646E-06,
         "scaleX": 3.7,
         "scaleY": 0.1,
         "scaleZ": 6.2
@@ -17533,7 +16809,7 @@
         "posX": 11.4000111,
         "posY": 2.05,
         "posZ": 11.00001,
-        "rotX": 1.81829378E-07,
+        "rotX": 1.81829463E-07,
         "rotY": 359.971649,
         "rotZ": 3.91527266E-07,
         "scaleX": 3.7,
@@ -17583,7 +16859,7 @@
         "posX": 7.60000658,
         "posY": 2.05,
         "posZ": 11.0000153,
-        "rotX": 2.684166E-07,
+        "rotX": 2.68416784E-07,
         "rotY": 359.6988,
         "rotZ": 7.38017263E-07,
         "scaleX": 3.7,
@@ -17840,7 +17116,7 @@
         "scaleY": 0.5500004,
         "scaleZ": 0.5500004
       },
-      "Nickname": "",
+      "Nickname": "Animal Cubes",
       "Description": "",
       "GMNotes": "",
       "AltLookAngle": {
@@ -17850,8 +17126,8 @@
       },
       "ColorDiffuse": {
         "r": 0.8397212,
-        "g": 0.313552856,
-        "b": 0.0541255474,
+        "g": 0.313552648,
+        "b": 0.0541254058,
         "a": 0.784313738
       },
       "Tags": [
@@ -17916,6 +17192,131 @@
             "a": 0.784313738
           },
           "Tags": [
+            "Token"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": false,
+          "CustomMesh": {
+            "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
+            "DiffuseURL": "",
+            "NormalURL": "",
+            "ColliderURL": "",
+            "Convex": true,
+            "MaterialIndex": 0,
+            "TypeIndex": 0,
+            "CastShadows": true
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        }
+      ]
+    },
+    {
+      "GUID": "781687",
+      "Name": "Custom_Model_Infinite_Bag",
+      "Transform": {
+        "posX": -14.5,
+        "posY": 2.25000334,
+        "posZ": 0.0,
+        "rotX": 0.000132783462,
+        "rotY": 179.998047,
+        "rotZ": 1.29542332E-05,
+        "scaleX": 0.25,
+        "scaleY": 0.25,
+        "scaleZ": 0.25
+      },
+      "Nickname": "Nature Spirit Cubes",
+      "Description": "",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 0.9137255,
+        "g": 0.9137255,
+        "b": 0.9137255,
+        "a": 0.784313738
+      },
+      "Tags": [
+        "Red",
+        "spiritScoreCubeBag",
+        "Token"
+      ],
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": true,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "MaterialIndex": -1,
+      "MeshIndex": -1,
+      "CustomMesh": {
+        "MeshURL": "https://steamusercontent-a.akamaihd.net/ugc/990115005955009243/A0CBD57DCF3FB4BEC13B9189E2CCEE944FD1C6EE/",
+        "DiffuseURL": "",
+        "NormalURL": "",
+        "ColliderURL": "",
+        "Convex": true,
+        "MaterialIndex": 0,
+        "TypeIndex": 7,
+        "CastShadows": true
+      },
+      "LuaScript": "",
+      "LuaScriptState": "",
+      "XmlUI": "",
+      "ContainedObjects": [
+        {
+          "GUID": "c57b1d",
+          "Name": "Custom_Model",
+          "Transform": {
+            "posX": -14.6217823,
+            "posY": 2.75221348,
+            "posZ": -0.104796,
+            "rotX": 359.9436,
+            "rotY": 0.00753488252,
+            "rotZ": 0.00271325023,
+            "scaleX": 0.25,
+            "scaleY": 0.25,
+            "scaleZ": 0.25
+          },
+          "Nickname": "",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.9137255,
+            "g": 0.9137255,
+            "b": 0.9137255,
+            "a": 0.784313738
+          },
+          "Tags": [
+            "Red",
             "Token"
           ],
           "LayoutGroupSortIndex": 0,
